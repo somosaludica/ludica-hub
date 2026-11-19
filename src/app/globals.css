@@ -1,0 +1,72 @@
+/* Identidade da Lúdica. Cores da logo original (preto e laranja), vinho e creme das propostas. Poppins.
+   Regras de contraste (escopo): laranja nunca é texto nem linha fina sobre fundo claro; bordas de
+   campos com 3:1; foco preto no claro e laranja no escuro; todo texto com 4,5:1. */
+:root {
+  --preto: #0e0f15;
+  --laranja: #f3901f;
+  --vinho: #7b1418;
+  --creme: #f7f1e6;
+  --fundo: #efebe4;
+  --cartao: #ffffff;
+  --texto: #0e0f15;
+  --texto-2: #4a5056;
+  --linha: #e6e1da;
+  --borda-campo: #8f8a83;
+  --foco: #0e0f15;
+  --raio: 22px;
+}
+
+/* Modo noturno: escolhido em Minha conta ou igual ao aparelho */
+[data-tema="escuro"] {
+  --fundo: #0b1419;
+  --cartao: #16222a;
+  --creme: #222f37;
+  --texto: #ece6dc;
+  --texto-2: #a9b2b9;
+  --linha: #2a3842;
+  --borda-campo: #7d8b95;
+  --foco: #f3901f;
+}
+@media (prefers-color-scheme: dark) {
+  [data-tema="sistema"] {
+    --fundo: #0b1419; --cartao: #16222a; --creme: #222f37; --texto: #ece6dc;
+    --texto-2: #a9b2b9; --linha: #2a3842; --borda-campo: #7d8b95; --foco: #f3901f;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: Poppins, system-ui, sans-serif;
+  color: var(--texto);
+  background: var(--fundo);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--vinho); }
+[data-tema="escuro"] a { color: #ff9a8f; }
+:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: inherit; font-size: 15px; font-weight: 600;
+  border-radius: 26px; padding: 0 22px; min-height: 48px;
+  border: 1px solid var(--texto); background: var(--texto); color: var(--fundo);
+  cursor: pointer; text-decoration: none;
+}
+.btn:disabled { opacity: .6; cursor: wait; }
+.btn.fantasma { background: transparent; color: var(--texto); }
+.btn.cheio { width: 100%; }
+
+.campo { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.entrada {
+  width: 100%; font-family: inherit; font-size: 15px;
+  border: 1px solid var(--borda-campo); border-radius: 14px; padding: 12px 14px; min-height: 50px;
+  background: var(--cartao); color: var(--texto);
+}
+
+.cartao { background: var(--cartao); border-radius: var(--raio); padding: 24px; }
+.rotulo { font-size: 12px; letter-spacing: 1.4px; text-transform: uppercase; font-weight: 600; color: var(--texto-2); }
+
+.aviso { border-radius: 14px; padding: 14px 16px; font-size: 14px; line-height: 1.55; background: var(--creme); }
+.aviso.erro { background: #fbe9ea; color: #5e0f12; }
+.aviso.ok { background: #eef5ef; color: #1d4d29; }
