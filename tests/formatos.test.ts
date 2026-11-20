@@ -37,3 +37,16 @@ test("aviso sai uma semana antes e um dia antes", () => {
   assert.equal(avisoAniversario("1990-11-22", hoje), null);
   assert.equal(avisoAniversario(null, hoje), null);
 });
+
+test("lê valores digitados em reais", async () => {
+  const { lerReais, reaisCampo } = await import("../src/lib/formatos.ts");
+  assert.equal(lerReais("1.500,00"), 1500);
+  assert.equal(lerReais("150"), 150);
+  assert.equal(lerReais("R$ 150,5"), 150.5);
+  assert.equal(lerReais("0,99"), 0.99);
+  assert.equal(lerReais("1500.00"), null);
+  assert.equal(lerReais("abc"), null);
+  assert.equal(lerReais(""), null);
+  assert.equal(lerReais("-10"), null);
+  assert.equal(reaisCampo(1500), "1.500,00");
+});

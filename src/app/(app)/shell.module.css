@@ -1,0 +1,138 @@
+/* Moldura: menu preto (fixo no computador, gaveta no celular) e conteúdo. */
+.app {
+  min-height: 100vh;
+  display: flex;
+  background: var(--fundo);
+  color: var(--texto);
+}
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 36px 40px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ----- Menu do computador ----- */
+.navDesk {
+  flex: none;
+  width: 260px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  background: #0e0f15;
+  color: #fff;
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  --foco: #f3901f;
+}
+.marca { display: flex; align-items: flex-end; gap: 10px; text-decoration: none; color: inherit; min-height: 44px; }
+.logo { height: 30px; width: auto; display: block; }
+.marcaHub { font-size: 12px; font-weight: 600; letter-spacing: 1.4px; color: #c9d0d6; padding-bottom: 2px; }
+
+.grupo { display: flex; flex-direction: column; gap: 8px; }
+.rotulo { font-size: 12px; letter-spacing: 1.4px; text-transform: uppercase; font-weight: 600; color: #c9d0d6; }
+.ambientes { display: flex; gap: 6px; }
+.amb {
+  flex: 1;
+  min-height: 44px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: #fff;
+  border: 1px solid #3a4650;
+}
+.amb[aria-pressed="true"] { background: #f3901f; color: #0e0f15; border-color: #f3901f; }
+
+.links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.link {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  color: #fff;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+}
+.link:hover { background: #1c2229; }
+.link[aria-current="page"] { background: #fff; color: #0e0f15; }
+.sair { color: #c9d0d6; }
+
+.rodape { margin-top: auto; display: flex; flex-direction: column; gap: 6px; }
+.prefs { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; padding: 0 4px 8px; }
+.pilulas { display: flex; gap: 4px; }
+.pilula {
+  min-height: 36px;
+  min-width: 44px;
+  padding: 0 10px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: #fff;
+  border: 1px solid #3a4650;
+}
+.pilula[aria-pressed="true"] { background: #fff; color: #0e0f15; border-color: #fff; }
+
+/* ----- Menu do celular ----- */
+.navMob { display: none; }
+.summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  min-height: 56px;
+  cursor: pointer;
+}
+.summary::-webkit-details-marker { display: none; }
+.logoMob { height: 24px; width: auto; display: block; }
+.summaryDir { display: flex; align-items: center; gap: 10px; }
+.badge { padding: 4px 10px; border-radius: 12px; background: #f3901f; color: #0e0f15; font-size: 12px; font-weight: 700; }
+.botaoMenu {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid #3a4650;
+  border-radius: 22px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.gaveta { padding: 4px 16px 20px; display: flex; flex-direction: column; gap: 16px; }
+.gaveta .rodape { margin-top: 0; }
+
+@media (max-width: 899px) {
+  .app { flex-direction: column; }
+  .navDesk { display: none; }
+  .navMob {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #0e0f15;
+    color: #fff;
+    --foco: #f3901f;
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+  .main { padding: 24px 16px 48px; gap: 20px; }
+}

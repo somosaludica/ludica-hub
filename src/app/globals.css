@@ -43,7 +43,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 a { color: var(--vinho); }
-[data-tema="escuro"] a { color: #ff9a8f; }
+[data-tema="escuro"] a:not([class]) { color: #ff9a8f; }
 :focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
 
 .btn {
@@ -70,3 +70,61 @@ a { color: var(--vinho); }
 .aviso { border-radius: 14px; padding: 14px 16px; font-size: 14px; line-height: 1.55; background: var(--creme); }
 .aviso.erro { background: #fbe9ea; color: #5e0f12; }
 .aviso.ok { background: #eef5ef; color: #1d4d29; }
+
+/* ----- Peças comuns das telas internas ----- */
+.cab { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.cab h1 { margin: 6px 0 0; font-size: 30px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.15; }
+.acoes { display: flex; flex-wrap: wrap; gap: 12px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px;
+  border-radius: 22px; border: 1px solid var(--borda-campo); background: transparent;
+  color: var(--texto); font: inherit; font-size: 14px; font-weight: 500; text-decoration: none; cursor: pointer;
+}
+.chip[aria-current], .chip[aria-pressed="true"] { background: var(--texto); color: var(--fundo); border-color: var(--texto); }
+
+.selo { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; white-space: nowrap; background: var(--creme); color: var(--texto); }
+.selo.ok { background: #e3efe5; color: #1d4d29; }
+.selo.off { background: #ece8e2; color: #4a5056; }
+[data-tema="escuro"] .selo.ok { background: #1f3a27; color: #cfe9d5; }
+[data-tema="escuro"] .selo.off { background: #2a3842; color: #c9d0d6; }
+
+.grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.pilha { display: flex; flex-direction: column; gap: 12px; }
+.sub { font-size: 14px; line-height: 1.55; color: var(--texto-2); margin: 0; }
+.dica { font-size: 12px; color: var(--texto-2); margin-top: 6px; }
+
+/* Tabela que vira cartões no celular (cada célula leva data-label) */
+.tabela-caixa { background: var(--cartao); border-radius: var(--raio); padding: 8px; }
+.tabela { width: 100%; border-collapse: collapse; }
+.tabela th { text-align: left; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; color: var(--texto-2); padding: 12px 14px; border-bottom: 1px solid var(--linha); }
+.tabela td { padding: 12px 14px; font-size: 14px; border-bottom: 1px solid var(--linha); vertical-align: middle; }
+.tabela tr:last-child td { border-bottom: 0; }
+.tabela .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tabela a { color: var(--texto); font-weight: 600; }
+@media (max-width: 699px) {
+  .tabela thead { display: none; }
+  .tabela tr { display: block; padding: 12px 14px; border-bottom: 1px solid var(--linha); }
+  .tabela tr:last-child { border-bottom: 0; }
+  .tabela td { display: flex; justify-content: space-between; gap: 16px; padding: 4px 0; border: 0; }
+  .tabela td::before { content: attr(data-label); color: var(--texto-2); font-size: 13px; }
+  .tabela td:first-child { display: block; font-size: 15px; padding-bottom: 6px; }
+  .tabela td:first-child::before { content: none; }
+  .tabela .num { text-align: right; }
+}
+
+/* Formulários */
+.form { display: flex; flex-direction: column; gap: 18px; max-width: 760px; }
+.linha-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.linha-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 699px) { .linha-2, .linha-3 { grid-template-columns: 1fr; } }
+select.entrada { appearance: auto; }
+textarea.entrada { resize: vertical; min-height: 90px; line-height: 1.5; }
+.entrada:disabled { background: var(--creme); color: var(--texto-2); }
+.marcar { display: flex; align-items: center; gap: 12px; font-size: 14px; min-height: 44px; cursor: pointer; }
+.marcar input { width: 20px; height: 20px; flex: none; accent-color: var(--texto); }
+.btn.perigo { background: transparent; color: var(--vinho); border-color: var(--vinho); }
+[data-tema="escuro"] .btn.perigo { color: #ff9a8f; border-color: #ff9a8f; }
+[data-tema="escuro"] .aviso.erro { background: #3a1517; color: #ffd7d3; }
+[data-tema="escuro"] .aviso.ok { background: #1f3a27; color: #cfe9d5; }

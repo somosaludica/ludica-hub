@@ -90,3 +90,16 @@ export function avisoAniversario(nascimento: string | null, hoje: Date): "semana
   const dias = diasAteAniversario(nascimento, hoje);
   return dias === 7 ? "semana" : dias === 1 ? "amanha" : null;
 }
+
+/** Lê um valor digitado em reais ("1.500,00", "1500", "R$ 150,5") e devolve número com 2 casas, ou null se inválido. */
+export function lerReais(texto: string): number | null {
+  const limpo = texto.replace(/R\$|\s/g, "");
+  if (!/^\d{1,3}(\.\d{3})*(,\d{1,2})?$|^\d+(,\d{1,2})?$/.test(limpo)) return null;
+  return Math.round(Number(limpo.replace(/\./g, "").replace(",", ".")) * 100) / 100;
+}
+
+/** Valor para preencher um campo de edição: 1500 -> "1.500,00". */
+export function reaisCampo(valor: number | null | undefined): string {
+  if (valor == null) return "";
+  return valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
