@@ -12,7 +12,7 @@ Mesma base técnica do Lúdica OS (Next.js, Supabase, Vercel), em repositório e
 
 1. **Supabase → New project.** Região South America (São Paulo). Guarde a senha do banco num lugar seguro.
 2. **SQL Editor:** rode `supabase/migrations/0001_base.sql` inteiro e, em seguida, `supabase/seed/servicos.sql`.
-3. **Authentication → Users → Add user:** crie o usuário do Bob com "Auto Confirm User" marcado. Copie o User UID, cole em `supabase/primeiro_socio.sql` e rode no SQL Editor.
+3. **Authentication → Users → Add user:** crie o usuário do Bob com "Auto Confirm User" marcado. Troque o e-mail em `supabase/primeiro_socio.sql` e rode no SQL Editor.
 4. **Authentication → Sign In / Providers:** desligue "Allow new users to sign up". Só entra quem um sócio convidar.
 5. **Vercel → Add New Project:** importe este repositório e configure as variáveis de `.env.example`. A `SUPABASE_SECRET_KEY` vai só na Vercel.
 6. **Supabase → Authentication → URL Configuration:** em Site URL, o endereço da Vercel; em Redirect URLs, `https://SEU-ENDERECO/auth/confirmar` e `http://localhost:3000/auth/confirmar`.
