@@ -1,9 +1,9 @@
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { contexto, AMBIENTES, type Idioma, type Tema } from "@/lib/contexto";
-import { textos } from "@/lib/i18n";
-import { PERFIS } from "@/lib/formatos";
+import { IDIOMA_COOKIE, textos } from "@/lib/i18n";
 
 async function salvarConta(f: FormData) {
   "use server";
@@ -16,6 +16,7 @@ async function salvarConta(f: FormData) {
   }
   const supabase = await createClient();
   const { error } = await supabase.from("perfis").update({ nome, tema, idioma }).eq("id", ctx.usuarioId);
+  if (!error) (await cookies()).set(IDIOMA_COOKIE, idioma, { path: "/", sameSite: "lax", maxAge: 60 * 60 * 24 * 365 });
   revalidatePath("/", "layout");
   redirect(error ? "/conta?erro=1" : "/conta?salvo=1");
 }
@@ -37,19 +38,19 @@ export default async function Conta({ searchParams }: { searchParams: Promise<{ 
 
       {sp.salvo && (
         <div className="aviso ok" role="status">
-          Preferências salvas.
+          {t.preferenciasSalvas}
         </div>
       )}
       {sp.erro && (
         <div className="aviso erro" role="alert">
-          Não deu para salvar. Confira o nome e tente de novo.
+          {t.erroConta}
         </div>
       )}
 
       <form action={salvarConta} className="cartao form">
         <div>
           <label className="campo" htmlFor="nome">
-            Nome
+            {t.nome}
           </label>
           <input id="nome" name="nome" className="entrada" required defaultValue={ctx.nome} autoComplete="name" />
         </div>
@@ -61,7 +62,7 @@ export default async function Conta({ searchParams }: { searchParams: Promise<{ 
             <select id="tema" name="tema" className="entrada" defaultValue={ctx.tema}>
               <option value="claro">{t.claro}</option>
               <option value="escuro">{t.escuro}</option>
-              <option value="sistema">Igual ao aparelho</option>
+              <option value="sistema">{t.igualAparelho}</option>
             </select>
           </div>
           <div>
@@ -75,30 +76,27 @@ export default async function Conta({ searchParams }: { searchParams: Promise<{ 
             </select>
           </div>
         </div>
-        <p className="sub">
-          O idioma vale para as telas do sistema. Propostas, notas e mensagens para clientes seguem o idioma escolhido na
-          ficha de cada cliente.
-        </p>
+        <p className="sub">{t.notaIdioma}</p>
         <div className="acoes">
           <button type="submit" className="btn">
-            Salvar
+            {t.salvar}
           </button>
         </div>
       </form>
 
       <div className="cartao pilha" style={{ maxWidth: 760 }}>
-        <div className="rotulo">Seus acessos</div>
+        <div className="rotulo">{t.seusAcessos}</div>
         {meus.length === 0 ? (
           <p className="sub">{t.semAcesso}</p>
         ) : (
           meus.map((a) => (
             <div key={a.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
               <strong>{a.nome}</strong>
-              <span>{PERFIS[ctx.acessos[a.id]!]}</span>
+              <span>{t.perfis[ctx.acessos[a.id]!]}</span>
             </div>
           ))
         )}
-        <p className="sub">Quem muda os acessos são os sócios, na tela de Usuários.</p>
+        <p className="sub">{t.notaAcessos}</p>
       </div>
     </>
   );

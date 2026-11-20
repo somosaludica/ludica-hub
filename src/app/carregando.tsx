@@ -14,7 +14,7 @@ import styles from "./carregando.module.css";
  * passam todas pelo fetch) e desliga quando zera ou quando a página muda. Se nada for buscado
  * em 400 ms, o clique não carregava nada e o indicador nem chega a aparecer.
  */
-export default function Carregando() {
+export default function Carregando({ texto }: { texto: string }) {
   const pathname = usePathname();
   const [ativo, setAtivo] = useState(false);
   const pos = useRef({ x: -100, y: -100 });
@@ -126,7 +126,7 @@ export default function Carregando() {
         <Nave className={styles.nave} />
       </div>
       <span className={styles.leitor} role="status" aria-live="polite">
-        {ativo ? "Carregando…" : ""}
+        {ativo ? texto : ""}
       </span>
     </>
   );

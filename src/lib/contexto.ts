@@ -6,7 +6,8 @@ import type { Perfil } from "@/lib/formatos";
 
 export type AmbienteId = "hub" | "music" | "mkt";
 export type Tema = "claro" | "escuro" | "sistema";
-export type Idioma = "pt" | "en" | "es";
+export type { Idioma } from "@/lib/i18n";
+import type { Idioma } from "@/lib/i18n";
 
 export const AMBIENTE_COOKIE = "hub-ambiente";
 export const AMBIENTES: { id: AmbienteId; nome: string }[] = [

@@ -1,16 +1,17 @@
 import Link from "next/link";
+import { contexto } from "@/lib/contexto";
+import { textos } from "@/lib/i18n";
 
 /** Página ou registro que não existe, ou que é de outro ambiente. */
-export default function NaoEncontrado() {
+export default async function NaoEncontrado() {
+  const t = textos((await contexto()).idioma);
   return (
     <div className="cartao pilha" style={{ maxWidth: 560 }}>
-      <h1 style={{ margin: 0, fontSize: 20 }}>Não encontrado</h1>
-      <p className="sub">
-        Esse endereço não existe ou pertence a outro ambiente. Se você trocou de ambiente agora, volte e abra pela lista.
-      </p>
+      <h1 style={{ margin: 0, fontSize: 20 }}>{t.naoEncontrado}</h1>
+      <p className="sub">{t.naoEncontradoExplica}</p>
       <div>
         <Link href="/" className="btn">
-          Ir para o início
+          {t.irInicio}
         </Link>
       </div>
     </div>

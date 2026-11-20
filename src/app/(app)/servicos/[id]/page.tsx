@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { contexto, exigePerfil, nomeAmbiente } from "@/lib/contexto";
-import FormServico, { type Servico } from "./form";
+import { textos } from "@/lib/i18n";
+import FormServico, { type Servico, type TextosForm } from "./form";
 import { removerServico } from "../acoes";
 
 /** Criar (/servicos/novo) ou editar um serviço do ambiente aberto. */
@@ -17,6 +18,14 @@ export default async function PaginaServico({
   exigePerfil(ctx, ["socio", "administrativo"]);
   const [{ id }, { erro }] = await Promise.all([params, searchParams]);
   const novo = id === "novo";
+  const t = textos(ctx.idioma);
+  const tf: TextosForm = {
+    categoria: t.categoria, dicaCategoria: t.dicaCategoria, nomeServico: t.nomeServico, valorReais: t.valorReais,
+    unidadeCobranca: t.unidadeCobranca, prazoMinimo: t.prazoMinimo, dicaPrazoMensal: t.dicaPrazoMensal,
+    dicaPrazoOutros: t.dicaPrazoOutros, observacaoInterna: t.observacaoInterna, dicaObservacao: t.dicaObservacao,
+    marcaComplemento: t.marcaComplemento, marcaComercial: t.marcaComercial, marcaAtivo: t.marcaAtivo,
+    salvar: t.salvar, salvando: t.salvando, cancelar: t.cancelar, unidades: t.unidades,
+  };
 
   const supabase = await createClient();
   const [{ data: cats }, { data: atual }] = await Promise.all([
@@ -38,40 +47,37 @@ export default async function PaginaServico({
     <>
       <div className="cab">
         <div>
-          <div className="rotulo">Serviço · {nomeAmbiente(ctx.ambiente)}</div>
-          <h1>{novo ? "Novo serviço" : (atual as Servico).nome}</h1>
+          <div className="rotulo">{t.servico} · {nomeAmbiente(ctx.ambiente)}</div>
+          <h1>{novo ? t.novoServico : (atual as Servico).nome}</h1>
         </div>
         <Link href="/servicos" className="btn fantasma">
-          Voltar
+          {t.voltar}
         </Link>
       </div>
 
       {erro === "remover" && (
         <div className="aviso erro" role="alert">
-          Não deu para remover. Se o serviço já aparece em orçamentos, desmarque “Ativo” em vez de remover.
+          {t.erroRemover}
         </div>
       )}
 
-      <FormServico servico={atual as Servico | null} categorias={categorias} />
+      <FormServico servico={atual as Servico | null} categorias={categorias} t={tf} />
 
       <div className="aviso" style={{ maxWidth: 760 }}>
-        Mudar o valor não altera orçamentos já emitidos. O texto que vai na proposta (incluso, prazos, pagamento) ganha
-        tela própria junto com os orçamentos.
+        {t.avisoServico}
       </div>
 
       {!novo && ctx.perfil === "socio" && (
         <details className="cartao" style={{ maxWidth: 760 }}>
           <summary style={{ cursor: "pointer", fontWeight: 600, minHeight: 44, display: "flex", alignItems: "center" }}>
-            Remover serviço
+            {t.removerServico}
           </summary>
           <form action={removerServico} className="pilha" style={{ marginTop: 12 }}>
             <input type="hidden" name="id" value={id} />
-            <p className="sub">
-              Apaga o serviço da tabela de vez. Para só tirar de uso, desmarque “Ativo” e salve.
-            </p>
+            <p className="sub">{t.removerExplica}</p>
             <div>
               <button type="submit" className="btn perigo">
-                Remover de vez
+                {t.removerDeVez}
               </button>
             </div>
           </form>

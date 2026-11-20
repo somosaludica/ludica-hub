@@ -27,7 +27,7 @@ Sistema de gestão da Lúdica (HUB, MUSIC, MKT). Construído e mantido pelo Bob 
 - Rodar `npm run test:banco` antes de enviar qualquer migração.
 
 ## Estilo
-- Interface em português do Brasil, com inglês e espanhol por arquivo de tradução. Tom direto.
+- Interface em português, inglês e espanhol. **Nenhuma tela escreve texto direto no código**: tudo vem de `src/lib/i18n.ts`, sempre nos três idiomas (o TypeScript e `tests/i18n.test.ts` cobram). Não se traduz o que é dado digitado (nomes e categorias de serviço, clientes) nem o formato dos valores em reais. Tom direto.
 - Cores da logo: preto #0E0F15 e laranja #F3901F; vinho #7B1418 e creme #F7F1E6. Laranja nunca é texto nem linha fina sobre fundo claro.
 - Acessível: botões de verdade, alvos de 44px, texto com contraste 4,5:1, bordas de campo 3:1, foco visível.
 - No celular: menu recolhível, tabelas viram cartões, formulários em uma coluna.

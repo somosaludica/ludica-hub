@@ -1,33 +1,162 @@
-import type { Idioma } from "@/lib/contexto";
-
 /**
- * Textos da interface em português, inglês e espanhol, escolhidos em Minha conta.
- * Os documentos para clientes (proposta, nota, mensagens) seguem o idioma da ficha do cliente.
- * Cada tela nova acrescenta as suas chaves aqui nos três idiomas.
+ * Todos os textos da interface em português, inglês e espanhol, escolhidos em Minha conta.
+ * Regra: nenhuma tela escreve texto direto no código; tudo vem daqui, nos três idiomas.
+ * O TypeScript obriga en e es a terem as mesmas chaves do pt.
+ *
+ * Não se traduz: dados digitados (nomes e categorias de serviço, clientes) e valores em reais,
+ * que seguem o formato brasileiro (R$ 1.500,00) em qualquer idioma.
+ * Documentos para clientes (proposta, nota, mensagens) seguem o idioma da ficha do cliente.
  */
+import type { Unidade, Perfil } from "@/lib/formatos";
+
+export type Idioma = "pt" | "en" | "es";
+export const IDIOMA_COOKIE = "hub-idioma";
+
 const pt = {
+  // Menu e moldura
   menu: "Menu",
   menuPrincipal: "Menu principal",
   ambiente: "Ambiente",
   inicio: "Início",
   servicos: "Tabela de Serviços",
   conta: "Minha conta",
-  soSocios: "Só sócios",
   sair: "Sair",
   tema: "Tema",
   claro: "Claro",
   escuro: "Escuro",
+  igualAparelho: "Igual ao aparelho",
   idioma: "Idioma",
+  carregando: "Carregando…",
+
+  // Comuns
+  salvar: "Salvar",
+  salvando: "Salvando…",
+  cancelar: "Cancelar",
+  voltar: "Voltar",
+  irInicio: "Ir para o início",
+
+  // Início
   ola: "Olá",
   seuPerfil: "Seu perfil",
   voceEstaAqui: "Você está aqui",
   entrar: "Entrar",
   semAcesso: "Sua conta ainda não tem acesso a nenhum ambiente. Peça a um sócio para liberar.",
   paginaSemAcesso: "Seu perfil neste ambiente não abre essa página.",
-  emBreve: "Em construção",
+  descHub: "Eventos da casa, locação de espaço e pacotes.",
+  descMusic: "Produção musical, conteúdos e shows.",
+  descMkt: "Marketing, tráfego, audiovisual e design.",
+  servicosNaTabela: (n: number) => (n === 1 ? "1 serviço ativo na tabela" : `${n} serviços ativos na tabela`),
+  avisoPainel: "O painel com faturado, a receber, vencidos, metas e a agenda do dia chega com a cobrança e o financeiro.",
+
+  // Tabela de Serviços
+  servicosAtivos: (n: number) => (n === 1 ? "1 serviço ativo" : `${n} serviços ativos`),
+  novoServico: "Novo serviço",
+  servicoSalvo: "Serviço salvo.",
+  servicoRemovido: "Serviço removido.",
+  erroCarregar: "Não deu para carregar a tabela agora. Tente de novo em instantes.",
+  categoria: "Categoria",
+  todas: "Todas",
+  vazioEdita: "Nenhum serviço cadastrado neste ambiente ainda.",
+  vazioComercial: "Nenhum serviço liberado para você neste ambiente.",
+  colServico: "Serviço",
+  colValor: "Valor",
+  colUnidade: "Unidade",
+  colSituacao: "Situação",
+  complemento: "Complemento",
+  ativo: "Ativo",
+  inativo: "Inativo",
+  ocultoComercial: "Oculto do comercial",
+  minMeses: (n: number) => `mín. ${n} meses`,
+  avisoTabela: "Cada ambiente tem a sua tabela. Mudar um valor aqui não altera orçamentos já emitidos.",
+
+  // Serviço (criar e editar)
+  servico: "Serviço",
+  erroRemover: "Não deu para remover. Se o serviço já aparece em orçamentos, desmarque “Ativo” em vez de remover.",
+  avisoServico:
+    "Mudar o valor não altera orçamentos já emitidos. O texto que vai na proposta (incluso, prazos, pagamento) ganha tela própria junto com os orçamentos.",
+  removerServico: "Remover serviço",
+  removerExplica: "Apaga o serviço da tabela de vez. Para só tirar de uso, desmarque “Ativo” e salve.",
+  removerDeVez: "Remover de vez",
+  dicaCategoria: "Escolha uma existente ou digite uma nova.",
+  nomeServico: "Nome do serviço",
+  valorReais: "Valor (R$)",
+  unidadeCobranca: "Unidade de cobrança",
+  prazoMinimo: "Prazo mínimo (meses)",
+  dicaPrazoMensal: "Deixe vazio se não houver prazo mínimo.",
+  dicaPrazoOutros: "Só para serviços mensais.",
+  observacaoInterna: "Observação interna",
+  dicaObservacao: "Só o time vê. Não vai para o cliente.",
+  marcaComplemento: "É um complemento: só entra no orçamento junto de outro serviço",
+  marcaComercial: "Visível para o time comercial",
+  marcaAtivo: "Ativo: aparece na hora de montar orçamento",
+  erroSemPermissao: "Seu perfil não edita a Tabela de Serviços neste ambiente.",
+  erroCategoria: "Informe a categoria.",
+  erroNome: "Informe o nome do serviço.",
+  erroValor: "Valor inválido. Use o formato 1.500,00.",
+  erroUnidade: "Escolha a unidade de cobrança.",
+  erroPrazo: "Prazo mínimo deve ser um número inteiro de meses, entre 1 e 60.",
+  erroDuplicado: "Já existe um serviço com esse nome nessa categoria.",
+  erroSalvar: "Não deu para salvar agora. Tente de novo.",
+
+  // Minha conta
+  preferenciasSalvas: "Preferências salvas.",
+  erroConta: "Não deu para salvar. Confira o nome e tente de novo.",
+  nome: "Nome",
+  notaIdioma:
+    "O idioma vale para as telas do sistema. Propostas, notas e mensagens para clientes seguem o idioma escolhido na ficha de cada cliente.",
+  seusAcessos: "Seus acessos",
+  notaAcessos: "Quem muda os acessos são os sócios, na tela de Usuários.",
+
+  // Não encontrado
+  naoEncontrado: "Não encontrado",
+  naoEncontradoExplica: "Esse endereço não existe ou pertence a outro ambiente. Se você trocou de ambiente agora, volte e abra pela lista.",
+  paginaNaoEncontrada: "Página não encontrada",
+
+  // Login
+  loginTitulo: "HUB, MUSIC e MKT num lugar só.",
+  loginSub: "Clientes, serviços, orçamentos, cobrança e financeiro da Lúdica, cada ambiente com o seu.",
+  loginNota: "Acesso só para o time. Quem cria as contas são os sócios.",
+  email: "E-mail",
+  senha: "Senha",
+  lembrar: "Lembrar de mim neste aparelho",
+  lembrarSim: "Você fica conectado por 30 dias. Use só em aparelho seu.",
+  lembrarNao: "Você sai quando fechar o navegador.",
+  loginEntrar: "Entrar",
+  entrando: "Entrando…",
+  ou: "ou",
+  receberLink: "Receber link de acesso por e-mail",
+  linkEnviado: "Link enviado.",
+  linkEnviadoExplica: "Abra o e-mail neste aparelho e toque no link para entrar.",
+  voltarMinusculo: "voltar",
+  erroNaoConfirmado: "Seu login ainda não foi confirmado. Peça um link de acesso a um sócio.",
+  erroCredenciais: "E-mail ou senha não conferem. Nunca criou senha? Use o link por e-mail abaixo ou fale com um sócio.",
+  erroTentativas: "Muitas tentativas. Espere um minuto e tente de novo.",
+  erroEntrar: "Não deu para entrar:",
+  erroEmailVazio: "Escreva seu e-mail para receber o link.",
+  erroLimiteEmail: "O envio de e-mails está no limite agora. Espere alguns minutos ou peça o link a um sócio.",
+  erroSemConta: "Esse e-mail ainda não tem acesso. Fale com um sócio.",
+  erroLink: "Não deu para mandar o link:",
+  linkFalhou: "Esse link não funcionou",
+  linkFalhouExplica: "Ele pode ter expirado ou já ter sido usado. Peça um novo a um sócio ou entre com e-mail e senha.",
+  linkIncompleto: "Link incompleto.",
+  irLogin: "Ir para o login",
+
+  // Rótulos de dados fixos
+  unidades: {
+    unitario: "Unitário",
+    mensal: "Mensal",
+    diaria: "Diária",
+    por_hora: "Por hora",
+    por_faixa: "Por faixa",
+    por_video_musica: "Por vídeo/música",
+    por_evento: "Por evento",
+    por_pacote: "Por pacote",
+    por_formato_de_show: "Por formato de show",
+  } as Record<Unidade, string>,
+  perfis: { socio: "Sócio", administrativo: "Administrativo", comercial: "Comercial", pauta: "Pauta" } as Record<Perfil, string>,
 };
 
-type Textos = typeof pt;
+export type Textos = typeof pt;
 
 const en: Textos = {
   menu: "Menu",
@@ -36,19 +165,132 @@ const en: Textos = {
   inicio: "Home",
   servicos: "Services",
   conta: "My account",
-  soSocios: "Partners only",
   sair: "Sign out",
   tema: "Theme",
   claro: "Light",
   escuro: "Dark",
+  igualAparelho: "Same as device",
   idioma: "Language",
+  carregando: "Loading…",
+
+  salvar: "Save",
+  salvando: "Saving…",
+  cancelar: "Cancel",
+  voltar: "Back",
+  irInicio: "Go to home",
+
   ola: "Hi",
   seuPerfil: "Your role",
   voceEstaAqui: "You are here",
   entrar: "Open",
   semAcesso: "Your account has no workspace yet. Ask a partner for access.",
   paginaSemAcesso: "Your role in this workspace can't open that page.",
-  emBreve: "Coming soon",
+  descHub: "House events, space rental and packages.",
+  descMusic: "Music production, content and shows.",
+  descMkt: "Marketing, paid media, audiovisual and design.",
+  servicosNaTabela: (n) => (n === 1 ? "1 active service" : `${n} active services`),
+  avisoPainel: "The dashboard with billed, receivable, overdue, goals and today's schedule arrives with billing and finance.",
+
+  servicosAtivos: (n) => (n === 1 ? "1 active service" : `${n} active services`),
+  novoServico: "New service",
+  servicoSalvo: "Service saved.",
+  servicoRemovido: "Service removed.",
+  erroCarregar: "Couldn't load the list right now. Try again in a moment.",
+  categoria: "Category",
+  todas: "All",
+  vazioEdita: "No services in this workspace yet.",
+  vazioComercial: "No services released to you in this workspace.",
+  colServico: "Service",
+  colValor: "Price",
+  colUnidade: "Unit",
+  colSituacao: "Status",
+  complemento: "Add-on",
+  ativo: "Active",
+  inativo: "Inactive",
+  ocultoComercial: "Hidden from sales",
+  minMeses: (n) => `min. ${n} months`,
+  avisoTabela: "Each workspace has its own list. Changing a price here doesn't change quotes already issued.",
+
+  servico: "Service",
+  erroRemover: "Couldn't remove it. If the service is already in quotes, untick “Active” instead.",
+  avisoServico:
+    "Changing the price doesn't change quotes already issued. The proposal text (included, timelines, payment) gets its own screen together with quotes.",
+  removerServico: "Remove service",
+  removerExplica: "Deletes the service for good. To just stop using it, untick “Active” and save.",
+  removerDeVez: "Remove for good",
+  dicaCategoria: "Pick an existing one or type a new one.",
+  nomeServico: "Service name",
+  valorReais: "Price (R$)",
+  unidadeCobranca: "Billing unit",
+  prazoMinimo: "Minimum term (months)",
+  dicaPrazoMensal: "Leave empty if there's no minimum term.",
+  dicaPrazoOutros: "Monthly services only.",
+  observacaoInterna: "Internal note",
+  dicaObservacao: "Team only. Never goes to the client.",
+  marcaComplemento: "Add-on: only goes into a quote together with another service",
+  marcaComercial: "Visible to the sales team",
+  marcaAtivo: "Active: shows up when building a quote",
+  erroSemPermissao: "Your role can't edit services in this workspace.",
+  erroCategoria: "Enter the category.",
+  erroNome: "Enter the service name.",
+  erroValor: "Invalid price. Use the format 1.500,00.",
+  erroUnidade: "Choose the billing unit.",
+  erroPrazo: "Minimum term must be a whole number of months, from 1 to 60.",
+  erroDuplicado: "There's already a service with that name in this category.",
+  erroSalvar: "Couldn't save right now. Try again.",
+
+  preferenciasSalvas: "Preferences saved.",
+  erroConta: "Couldn't save. Check your name and try again.",
+  nome: "Name",
+  notaIdioma:
+    "This language applies to the system screens. Proposals, invoices and messages to clients use the language set on each client's record.",
+  seusAcessos: "Your access",
+  notaAcessos: "Partners change access on the Users screen.",
+
+  naoEncontrado: "Not found",
+  naoEncontradoExplica: "This address doesn't exist or belongs to another workspace. If you just switched workspace, go back and open it from the list.",
+  paginaNaoEncontrada: "Page not found",
+
+  loginTitulo: "HUB, MUSIC and MKT in one place.",
+  loginSub: "Lúdica's clients, services, quotes, billing and finance, each workspace with its own.",
+  loginNota: "Team access only. Partners create the accounts.",
+  email: "Email",
+  senha: "Password",
+  lembrar: "Remember me on this device",
+  lembrarSim: "You stay signed in for 30 days. Only use on your own device.",
+  lembrarNao: "You'll be signed out when you close the browser.",
+  loginEntrar: "Sign in",
+  entrando: "Signing in…",
+  ou: "or",
+  receberLink: "Get a sign-in link by email",
+  linkEnviado: "Link sent.",
+  linkEnviadoExplica: "Open the email on this device and tap the link to sign in.",
+  voltarMinusculo: "back",
+  erroNaoConfirmado: "Your sign-in isn't confirmed yet. Ask a partner for an access link.",
+  erroCredenciais: "Email or password don't match. Never set a password? Use the email link below or talk to a partner.",
+  erroTentativas: "Too many attempts. Wait a minute and try again.",
+  erroEntrar: "Couldn't sign in:",
+  erroEmailVazio: "Type your email to get the link.",
+  erroLimiteEmail: "Email sending is at its limit right now. Wait a few minutes or ask a partner for the link.",
+  erroSemConta: "This email doesn't have access yet. Talk to a partner.",
+  erroLink: "Couldn't send the link:",
+  linkFalhou: "This link didn't work",
+  linkFalhouExplica: "It may have expired or already been used. Ask a partner for a new one or sign in with email and password.",
+  linkIncompleto: "Incomplete link.",
+  irLogin: "Go to sign in",
+
+  unidades: {
+    unitario: "Per unit",
+    mensal: "Monthly",
+    diaria: "Daily",
+    por_hora: "Hourly",
+    por_faixa: "Per track",
+    por_video_musica: "Per video/song",
+    por_evento: "Per event",
+    por_pacote: "Per package",
+    por_formato_de_show: "Per show format",
+  },
+  perfis: { socio: "Partner", administrativo: "Admin", comercial: "Sales", pauta: "Scheduling" },
 };
 
 const es: Textos = {
@@ -58,23 +300,154 @@ const es: Textos = {
   inicio: "Inicio",
   servicos: "Tabla de servicios",
   conta: "Mi cuenta",
-  soSocios: "Solo socios",
   sair: "Salir",
   tema: "Tema",
   claro: "Claro",
   escuro: "Oscuro",
+  igualAparelho: "Igual al dispositivo",
   idioma: "Idioma",
+  carregando: "Cargando…",
+
+  salvar: "Guardar",
+  salvando: "Guardando…",
+  cancelar: "Cancelar",
+  voltar: "Volver",
+  irInicio: "Ir al inicio",
+
   ola: "Hola",
   seuPerfil: "Tu perfil",
   voceEstaAqui: "Estás aquí",
   entrar: "Entrar",
   semAcesso: "Tu cuenta aún no tiene acceso a ningún ambiente. Pide acceso a un socio.",
   paginaSemAcesso: "Tu perfil en este ambiente no abre esa página.",
-  emBreve: "En construcción",
+  descHub: "Eventos de la casa, alquiler de espacio y paquetes.",
+  descMusic: "Producción musical, contenidos y shows.",
+  descMkt: "Marketing, tráfico pago, audiovisual y diseño.",
+  servicosNaTabela: (n) => (n === 1 ? "1 servicio activo en la tabla" : `${n} servicios activos en la tabla`),
+  avisoPainel: "El panel con facturado, por cobrar, vencidos, metas y la agenda del día llega con la cobranza y las finanzas.",
+
+  servicosAtivos: (n) => (n === 1 ? "1 servicio activo" : `${n} servicios activos`),
+  novoServico: "Nuevo servicio",
+  servicoSalvo: "Servicio guardado.",
+  servicoRemovido: "Servicio eliminado.",
+  erroCarregar: "No se pudo cargar la tabla ahora. Intenta de nuevo en un momento.",
+  categoria: "Categoría",
+  todas: "Todas",
+  vazioEdita: "Todavía no hay servicios en este ambiente.",
+  vazioComercial: "No hay servicios habilitados para ti en este ambiente.",
+  colServico: "Servicio",
+  colValor: "Valor",
+  colUnidade: "Unidad",
+  colSituacao: "Estado",
+  complemento: "Complemento",
+  ativo: "Activo",
+  inativo: "Inactivo",
+  ocultoComercial: "Oculto para ventas",
+  minMeses: (n) => `mín. ${n} meses`,
+  avisoTabela: "Cada ambiente tiene su tabla. Cambiar un valor aquí no altera presupuestos ya emitidos.",
+
+  servico: "Servicio",
+  erroRemover: "No se pudo eliminar. Si el servicio ya está en presupuestos, desmarca “Activo” en lugar de eliminarlo.",
+  avisoServico:
+    "Cambiar el valor no altera presupuestos ya emitidos. El texto de la propuesta (incluido, plazos, pago) tendrá su propia pantalla junto con los presupuestos.",
+  removerServico: "Eliminar servicio",
+  removerExplica: "Borra el servicio de la tabla para siempre. Para solo dejar de usarlo, desmarca “Activo” y guarda.",
+  removerDeVez: "Eliminar para siempre",
+  dicaCategoria: "Elige una existente o escribe una nueva.",
+  nomeServico: "Nombre del servicio",
+  valorReais: "Valor (R$)",
+  unidadeCobranca: "Unidad de cobro",
+  prazoMinimo: "Plazo mínimo (meses)",
+  dicaPrazoMensal: "Déjalo vacío si no hay plazo mínimo.",
+  dicaPrazoOutros: "Solo para servicios mensuales.",
+  observacaoInterna: "Nota interna",
+  dicaObservacao: "Solo la ve el equipo. No va al cliente.",
+  marcaComplemento: "Es un complemento: solo entra al presupuesto junto con otro servicio",
+  marcaComercial: "Visible para el equipo de ventas",
+  marcaAtivo: "Activo: aparece al armar un presupuesto",
+  erroSemPermissao: "Tu perfil no edita la tabla de servicios en este ambiente.",
+  erroCategoria: "Indica la categoría.",
+  erroNome: "Indica el nombre del servicio.",
+  erroValor: "Valor inválido. Usa el formato 1.500,00.",
+  erroUnidade: "Elige la unidad de cobro.",
+  erroPrazo: "El plazo mínimo debe ser un número entero de meses, entre 1 y 60.",
+  erroDuplicado: "Ya existe un servicio con ese nombre en esta categoría.",
+  erroSalvar: "No se pudo guardar ahora. Intenta de nuevo.",
+
+  preferenciasSalvas: "Preferencias guardadas.",
+  erroConta: "No se pudo guardar. Revisa el nombre e intenta de nuevo.",
+  nome: "Nombre",
+  notaIdioma:
+    "El idioma vale para las pantallas del sistema. Propuestas, notas y mensajes a clientes siguen el idioma elegido en la ficha de cada cliente.",
+  seusAcessos: "Tus accesos",
+  notaAcessos: "Los socios cambian los accesos en la pantalla de Usuarios.",
+
+  naoEncontrado: "No encontrado",
+  naoEncontradoExplica: "Esta dirección no existe o pertenece a otro ambiente. Si acabas de cambiar de ambiente, vuelve y ábrela desde la lista.",
+  paginaNaoEncontrada: "Página no encontrada",
+
+  loginTitulo: "HUB, MUSIC y MKT en un solo lugar.",
+  loginSub: "Clientes, servicios, presupuestos, cobranza y finanzas de Lúdica, cada ambiente con lo suyo.",
+  loginNota: "Acceso solo para el equipo. Los socios crean las cuentas.",
+  email: "Correo",
+  senha: "Contraseña",
+  lembrar: "Recordarme en este dispositivo",
+  lembrarSim: "Sigues conectado por 30 días. Úsalo solo en tu propio dispositivo.",
+  lembrarNao: "Se cierra la sesión al cerrar el navegador.",
+  loginEntrar: "Entrar",
+  entrando: "Entrando…",
+  ou: "o",
+  receberLink: "Recibir enlace de acceso por correo",
+  linkEnviado: "Enlace enviado.",
+  linkEnviadoExplica: "Abre el correo en este dispositivo y toca el enlace para entrar.",
+  voltarMinusculo: "volver",
+  erroNaoConfirmado: "Tu acceso aún no fue confirmado. Pide un enlace de acceso a un socio.",
+  erroCredenciais: "Correo o contraseña no coinciden. ¿Nunca creaste contraseña? Usa el enlace por correo o habla con un socio.",
+  erroTentativas: "Demasiados intentos. Espera un minuto e intenta de nuevo.",
+  erroEntrar: "No se pudo entrar:",
+  erroEmailVazio: "Escribe tu correo para recibir el enlace.",
+  erroLimiteEmail: "El envío de correos está al límite ahora. Espera unos minutos o pide el enlace a un socio.",
+  erroSemConta: "Este correo aún no tiene acceso. Habla con un socio.",
+  erroLink: "No se pudo enviar el enlace:",
+  linkFalhou: "Este enlace no funcionó",
+  linkFalhouExplica: "Puede haber expirado o ya haberse usado. Pide uno nuevo a un socio o entra con correo y contraseña.",
+  linkIncompleto: "Enlace incompleto.",
+  irLogin: "Ir al inicio de sesión",
+
+  unidades: {
+    unitario: "Unitario",
+    mensal: "Mensual",
+    diaria: "Diaria",
+    por_hora: "Por hora",
+    por_faixa: "Por tema",
+    por_video_musica: "Por video/canción",
+    por_evento: "Por evento",
+    por_pacote: "Por paquete",
+    por_formato_de_show: "Por formato de show",
+  },
+  perfis: { socio: "Socio", administrativo: "Administrativo", comercial: "Ventas", pauta: "Agenda" },
 };
 
 const TEXTOS: Record<Idioma, Textos> = { pt, en, es };
 
-export function textos(idioma: Idioma): Textos {
-  return TEXTOS[idioma] ?? pt;
+export function textos(idioma: Idioma | null | undefined): Textos {
+  return TEXTOS[idioma ?? "pt"] ?? pt;
 }
+
+export function ehIdioma(v: unknown): v is Idioma {
+  return v === "pt" || v === "en" || v === "es";
+}
+
+/** Idioma de quem ainda não entrou: o último usado neste aparelho ou o do navegador. */
+export function idiomaDoPedido(cookie: string | undefined, acceptLanguage: string | null): Idioma {
+  if (ehIdioma(cookie)) return cookie;
+  const pref = (acceptLanguage ?? "").toLowerCase();
+  for (const parte of pref.split(",")) {
+    const l = parte.trim().slice(0, 2);
+    if (ehIdioma(l)) return l;
+  }
+  return "pt";
+}
+
+/** Atributo lang do HTML para cada idioma. */
+export const LANG: Record<Idioma, string> = { pt: "pt-BR", en: "en", es: "es" };

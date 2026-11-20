@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import type { AmbienteId, Idioma, Tema } from "@/lib/contexto";
+import { IDIOMA_COOKIE } from "@/lib/i18n";
 import { salvarPreferencia, trocarAmbiente } from "./acoes";
 import styles from "./shell.module.css";
 
@@ -25,6 +26,13 @@ function ativo(pathname: string, href: string) {
 export default function Menu({ itens, ambientes, ambiente, tema, idioma, t }: Props) {
   const pathname = usePathname();
   const gaveta = useRef<HTMLDetailsElement>(null);
+
+  // Mantém o cookie de idioma igual ao do perfil (vale para o login e o indicador de carregamento).
+  useEffect(() => {
+    if (!document.cookie.split("; ").includes(`${IDIOMA_COOKIE}=${idioma}`)) {
+      document.cookie = `${IDIOMA_COOKIE}=${idioma}; path=/; max-age=31536000; samesite=lax`;
+    }
+  }, [idioma]);
 
   // No celular, fecha o menu ao trocar de página.
   useEffect(() => {

@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { AMBIENTE_COOKIE, AMBIENTES, contexto, type Idioma, type Tema } from "@/lib/contexto";
+import { IDIOMA_COOKIE } from "@/lib/i18n";
 
 /** Troca o ambiente aberto. Só aceita um ambiente a que a pessoa tem acesso. */
 export async function trocarAmbiente(formData: FormData) {
@@ -26,5 +27,9 @@ export async function salvarPreferencia(formData: FormData) {
   const ctx = await contexto();
   const supabase = await createClient();
   await supabase.from("perfis").update(mudanca).eq("id", ctx.usuarioId);
+  if (mudanca.idioma) {
+    const store = await cookies();
+    store.set(IDIOMA_COOKIE, mudanca.idioma, { path: "/", sameSite: "lax", maxAge: 60 * 60 * 24 * 365 });
+  }
   revalidatePath("/", "layout");
 }

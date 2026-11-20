@@ -1,5 +1,5 @@
 import { contexto, AMBIENTES } from "@/lib/contexto";
-import { textos } from "@/lib/i18n";
+import { LANG, textos } from "@/lib/i18n";
 import Menu, { type ItemMenu } from "./menu";
 import styles from "./shell.module.css";
 
@@ -20,7 +20,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const ambientes = AMBIENTES.filter((a) => ctx.acessos[a.id]);
 
   return (
-    <div data-tema={ctx.tema} className={styles.app} lang={ctx.idioma === "pt" ? "pt-BR" : ctx.idioma}>
+    <div data-tema={ctx.tema} className={styles.app} lang={LANG[ctx.idioma]}>
       <Menu
         itens={itens}
         ambientes={ambientes}

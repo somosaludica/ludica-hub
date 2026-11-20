@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
-import { reaisCampo, UNIDADES, type Unidade } from "@/lib/formatos";
+import { reaisCampo, type Unidade } from "@/lib/formatos";
 import { salvarServico, type Estado } from "../acoes";
 
 export type Servico = {
@@ -18,7 +18,14 @@ export type Servico = {
   observacao_interna: string | null;
 };
 
-export default function FormServico({ servico, categorias }: { servico: Servico | null; categorias: string[] }) {
+export type TextosForm = Record<
+  | "categoria" | "dicaCategoria" | "nomeServico" | "valorReais" | "unidadeCobranca" | "prazoMinimo"
+  | "dicaPrazoMensal" | "dicaPrazoOutros" | "observacaoInterna" | "dicaObservacao" | "marcaComplemento"
+  | "marcaComercial" | "marcaAtivo" | "salvar" | "salvando" | "cancelar",
+  string
+> & { unidades: Record<Unidade, string> };
+
+export default function FormServico({ servico, categorias, t }: { servico: Servico | null; categorias: string[]; t: TextosForm }) {
   const [estado, enviar, enviando] = useActionState<Estado, FormData>(salvarServico, {});
   const v = estado.valores;
   const txt = (k: string, atual: string) => v?.[k] ?? atual;
@@ -44,7 +51,7 @@ export default function FormServico({ servico, categorias }: { servico: Servico 
       <div className="linha-2">
         <div>
           <label className="campo" htmlFor="categoria">
-            Categoria
+            {t.categoria}
           </label>
           <input
             id="categoria"
@@ -61,12 +68,12 @@ export default function FormServico({ servico, categorias }: { servico: Servico 
             ))}
           </datalist>
           <div id="categoria-dica" className="dica">
-            Escolha uma existente ou digite uma nova.
+            {t.dicaCategoria}
           </div>
         </div>
         <div>
           <label className="campo" htmlFor="nome">
-            Nome do serviço
+            {t.nomeServico}
           </label>
           <input id="nome" name="nome" className="entrada" required defaultValue={txt("nome", servico?.nome ?? "")} />
         </div>
@@ -75,7 +82,7 @@ export default function FormServico({ servico, categorias }: { servico: Servico 
       <div className="linha-3">
         <div>
           <label className="campo" htmlFor="valor">
-            Valor (R$)
+            {t.valorReais}
           </label>
           <input
             id="valor"
@@ -89,7 +96,7 @@ export default function FormServico({ servico, categorias }: { servico: Servico 
         </div>
         <div>
           <label className="campo" htmlFor="unidade">
-            Unidade de cobrança
+            {t.unidadeCobranca}
           </label>
           <select
             id="unidade"
@@ -98,7 +105,7 @@ export default function FormServico({ servico, categorias }: { servico: Servico 
             defaultValue={txt("unidade", servico?.unidade ?? "unitario")}
             onChange={(e) => setUnidade(e.target.value as Unidade)}
           >
-            {Object.entries(UNIDADES).map(([k, v]) => (
+            {Object.entries(t.unidades).map(([k, v]) => (
               <option key={k} value={k}>
                 {v}
               </option>
@@ -107,7 +114,7 @@ export default function FormServico({ servico, categorias }: { servico: Servico 
         </div>
         <div>
           <label className="campo" htmlFor="prazo">
-            Prazo mínimo (meses)
+            {t.prazoMinimo}
           </label>
           <input
             id="prazo"
@@ -121,14 +128,14 @@ export default function FormServico({ servico, categorias }: { servico: Servico 
             aria-describedby="prazo-dica"
           />
           <div id="prazo-dica" className="dica">
-            {mensal ? "Deixe vazio se não houver prazo mínimo." : "Só para serviços mensais."}
+            {mensal ? t.dicaPrazoMensal : t.dicaPrazoOutros}
           </div>
         </div>
       </div>
 
       <div>
         <label className="campo" htmlFor="observacao">
-          Observação interna
+          {t.observacaoInterna}
         </label>
         <textarea
           id="observacao"
@@ -139,31 +146,31 @@ export default function FormServico({ servico, categorias }: { servico: Servico 
           aria-describedby="obs-dica"
         />
         <div id="obs-dica" className="dica">
-          Só o time vê. Não vai para o cliente.
+          {t.dicaObservacao}
         </div>
       </div>
 
       <div>
         <label className="marcar">
           <input type="checkbox" name="complemento" defaultChecked={marc("complemento", servico?.complemento ?? false)} />
-          É um complemento: só entra no orçamento junto de outro serviço
+          {t.marcaComplemento}
         </label>
         <label className="marcar">
           <input type="checkbox" name="visivel_comercial" defaultChecked={marc("visivel_comercial", servico?.visivel_comercial ?? true)} />
-          Visível para o time comercial
+          {t.marcaComercial}
         </label>
         <label className="marcar">
           <input type="checkbox" name="ativo" defaultChecked={marc("ativo", servico?.ativo ?? true)} />
-          Ativo: aparece na hora de montar orçamento
+          {t.marcaAtivo}
         </label>
       </div>
 
       <div className="acoes">
         <button type="submit" className="btn" disabled={enviando}>
-          {enviando ? "Salvando…" : "Salvar"}
+          {enviando ? t.salvando : t.salvar}
         </button>
         <Link href="/servicos" className="btn fantasma">
-          Cancelar
+          {t.cancelar}
         </Link>
       </div>
     </form>
