@@ -56,19 +56,20 @@ async function salvar(f: FormData): Promise<Estado> {
     visivel_comercial: f.get("visivel_comercial") === "on",
     ativo: f.get("ativo") === "on",
     observacao_interna: texto(f, "observacao") || null,
-    atualizado_em: new Date().toISOString(),
   };
 
   const supabase = await createClient();
-  const { error } = id
-    ? await supabase.from("servicos").update(dados).eq("id", id).eq("ambiente_id", ctx.ambiente!)
-    : await supabase.from("servicos").insert({ ...dados, ambiente_id: ctx.ambiente! });
+  const { data: gravado, error } = id
+    ? await supabase.from("servicos").update(dados).eq("id", id).eq("ambiente_id", ctx.ambiente!).select("id")
+    : await supabase.from("servicos").insert({ ...dados, ambiente_id: ctx.ambiente! }).select("id");
 
   if (error) {
     if (error.code === "23505") return { erro: t.erroDuplicado };
     if (error.code === "42501") return { erro: t.erroSemPermissao };
     return { erro: t.erroSalvar };
   }
+  // O banco não devolve erro quando a regra de acesso filtra a linha: nada gravado é falha.
+  if (!gravado?.length) return { erro: t.erroSemPermissao };
   revalidatePath("/servicos");
   redirect("/servicos?salvo=1");
 }
@@ -79,8 +80,8 @@ export async function removerServico(f: FormData) {
   const id = texto(f, "id");
   if (ctx.perfil !== "socio" || !id) return;
   const supabase = await createClient();
-  const { error } = await supabase.from("servicos").delete().eq("id", id).eq("ambiente_id", ctx.ambiente!);
-  if (error) redirect(`/servicos/${id}?erro=remover`);
+  const { data: apagado, error } = await supabase.from("servicos").delete().eq("id", id).eq("ambiente_id", ctx.ambiente!).select("id");
+  if (error || !apagado?.length) redirect(`/servicos/${id}?erro=remover`);
   revalidatePath("/servicos");
   redirect("/servicos?salvo=removido");
 }

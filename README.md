@@ -11,7 +11,7 @@ Mesma base técnica do Lúdica OS (Next.js, Supabase, Vercel), em repositório e
 ## Configuração (uma vez)
 
 1. **Supabase → New project.** Região South America (São Paulo). Guarde a senha do banco num lugar seguro.
-2. **SQL Editor:** rode `supabase/migrations/0001_base.sql` inteiro e, em seguida, `supabase/seed/servicos.sql`.
+2. **SQL Editor:** rode os arquivos de `supabase/migrations/` em ordem numérica (cada um uma única vez) e, depois da 0001, `supabase/seed/servicos.sql`.
 3. **Authentication → Users → Add user:** crie o usuário do Bob com "Auto Confirm User" marcado. Troque o e-mail em `supabase/primeiro_socio.sql` e rode no SQL Editor.
 4. **Authentication → Sign In / Providers:** desligue "Allow new users to sign up". Só entra quem um sócio convidar.
 5. **Vercel → Add New Project:** importe este repositório e configure as variáveis de `.env.example`. A `SUPABASE_SECRET_KEY` vai só na Vercel.

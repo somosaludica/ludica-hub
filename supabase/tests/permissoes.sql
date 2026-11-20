@@ -141,5 +141,20 @@ set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000001';
 select teste.igual((select count(*) from clientes), 2, 'Bob vê o cliente que o comercial cadastrou');
 select teste.igual((select count(*) from leads), 2, 'Bob vê todos os leads');
 
+-- ================= Logado sem cadastro (conta criada por fora do convite) =================
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000ff';
+select teste.igual((select count(*) from servicos), 0, 'Conta sem cadastro não vê serviços');
+select teste.igual((select count(*) from clientes), 0, 'Conta sem cadastro não vê clientes');
+select teste.igual((select count(*) from perfis), 0, 'Conta sem cadastro não vê pessoas');
+select teste.bloqueado($$insert into clientes (nome) values ('x')$$, 'Conta sem cadastro não cadastra nada');
+
 reset role;
+-- ================= Visitante e servidor =================
+select teste.igual((select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'execute'))::bigint, 0, 'Visitante não executa nenhuma função');
+select teste.igual((select count(*) from information_schema.role_table_grants
+  where table_schema = 'public' and grantee = 'anon')::bigint, 0, 'Visitante não tem permissão em nenhuma tabela');
+select teste.igual((select has_table_privilege('service_role', 'perfis', 'insert'))::int::bigint, 1, 'Servidor consegue cadastrar pessoas (convite)');
+update servicos set valor = valor where nome = 'Mix';
+select teste.igual((select count(*) from servicos where nome = 'Mix' and atualizado_em > criado_em)::bigint, 1, 'Alterar um serviço atualiza a data no banco');
 \echo TODOS OS TESTES PASSARAM
