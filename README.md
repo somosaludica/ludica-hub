@@ -36,3 +36,11 @@ npm run test:banco            # migrações e permissões num Postgres 16 local
 3. Cobrança e financeiro: parcelas, nota de débito, régua por e-mail e WhatsApp, fechamento, resumo do ano, metas, comissões, migração do financeiro temporário.
 4. Agendas e pauta: sala de reunião, estúdio, sessões, pauta de produção, agenda da casa.
 5. Integrações: nota fiscal, assinatura eletrônica, Lúdica OS.
+
+## Deixado para o final (decisão do Bob, 20/11)
+
+Não fazer antes das fases de orçamento, cobrança, financeiro e agendas estarem prontas:
+
+- Acabamento de design das telas (revisão visual geral).
+- Foto do cliente e botão da foto do grupo de WhatsApp (depende do armazenamento de arquivos e do modelo que o Bob vai mandar).
+- Tela de dados de cada ambiente (razão social, CNPJ, endereço do emissor). Até lá os documentos saem com "Lúdica Marketing".
