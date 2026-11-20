@@ -58,14 +58,14 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
                 <div className="rotulo">
                   {t.seuPerfil}: {PERFIS[perfil]}
                 </div>
-                <div style={{ fontSize: 26, fontWeight: 700 }}>{a.nome}</div>
+                <div style={{ fontSize: 22, fontWeight: 700 }}>{a.nome}</div>
                 <p className="sub">{DESCRICAO[a.id]}</p>
                 {perfil !== "pauta" && (
-                  <div style={{ fontSize: 14, fontWeight: 500 }}>{qtd(a.id)} serviços ativos na tabela</div>
+                  <div style={{ fontSize: 13, fontWeight: 500 }}>{qtd(a.id)} serviços ativos na tabela</div>
                 )}
                 <div style={{ marginTop: 4 }}>
                   {aqui ? (
-                    <span style={{ fontSize: 14, fontWeight: 600 }}>{t.voceEstaAqui}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>{t.voceEstaAqui}</span>
                   ) : (
                     <form action={trocarAmbiente}>
                       <button className="btn fantasma" type="submit" name="ambiente" value={a.id}>

@@ -38,7 +38,7 @@ export default function Confirmar() {
           <>
             <h1 style={{ margin: 0 }}>Esse link não funcionou<span style={{ color: "#f3901f" }}>.</span></h1>
             <p style={{ margin: 0, color: "#4a5056" }}>Ele pode ter expirado ou já ter sido usado. Peça um novo a um sócio ou entre com e-mail e senha.</p>
-            <p style={{ margin: 0, color: "#8a8f93", fontSize: 12 }}>{erro}</p>
+            <p style={{ margin: 0, color: "#8a8f93", fontSize: 11 }}>{erro}</p>
             <a href="/login" className="btn" style={{ textDecoration: "none" }}>Ir para o login</a>
           </>
         ) : <p role="status">Entrando…</p>}

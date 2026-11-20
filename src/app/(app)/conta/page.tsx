@@ -92,7 +92,7 @@ export default async function Conta({ searchParams }: { searchParams: Promise<{ 
           <p className="sub">{t.semAcesso}</p>
         ) : (
           meus.map((a) => (
-            <div key={a.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 15 }}>
+            <div key={a.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
               <strong>{a.nome}</strong>
               <span>{PERFIS[ctx.acessos[a.id]!]}</span>
             </div>

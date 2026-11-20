@@ -6,28 +6,28 @@
   display: flex; flex-direction: column; justify-content: space-between; gap: 48px;
 }
 .logo { height: 40px; width: auto; display: block; align-self: flex-start; }
-.titulo { margin: 0; font-size: 44px; font-weight: 700; line-height: 1.12; letter-spacing: -1px; }
-.sub { margin: 16px 0 0; font-size: 17px; color: #c9d0d6; line-height: 1.6; max-width: 440px; }
-.nota-marca { font-size: 13px; color: #c9d0d6; }
+.titulo { margin: 0; font-size: 36px; font-weight: 700; line-height: 1.12; letter-spacing: -1px; }
+.sub { margin: 16px 0 0; font-size: 15px; color: #c9d0d6; line-height: 1.6; max-width: 440px; }
+.nota-marca { font-size: 12px; color: #c9d0d6; }
 
 .lado { flex: 1 1 420px; display: flex; align-items: center; justify-content: center; padding: 56px 24px; }
 .form { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 18px; background: var(--cartao); border-radius: var(--raio); padding: 32px; }
-.h1 { margin: 0; font-size: 24px; font-weight: 700; }
+.h1 { margin: 0; font-size: 20px; font-weight: 700; }
 .campos { display: flex; flex-direction: column; gap: 16px; }
 
-.lembrar { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; cursor: pointer; min-height: 44px; }
+.lembrar { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; cursor: pointer; min-height: 44px; }
 .lembrar input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--preto); flex: none; }
 .lembrar strong { display: block; font-weight: 600; }
-.nota { font-size: 12px; color: var(--texto-2); }
+.nota { font-size: 11px; color: var(--texto-2); }
 
-.ou { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--texto-2); }
+.ou { display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--texto-2); }
 .ou span { flex: 1; height: 1px; background: var(--linha); }
 
-.link { font-family: inherit; font-size: 14px; background: none; border: 0; padding: 0; color: var(--vinho); text-decoration: underline; cursor: pointer; }
+.link { font-family: inherit; font-size: 13px; background: none; border: 0; padding: 0; color: var(--vinho); text-decoration: underline; cursor: pointer; }
 
 @media (max-width: 760px) {
   .marca { min-height: 0; padding: 28px 24px; gap: 20px; }
-  .titulo { font-size: 30px; }
+  .titulo { font-size: 24px; }
   .nota-marca { display: none; }
   .lado { padding: 24px 16px 40px; }
   .form { padding: 24px; }

@@ -8,41 +8,41 @@
 .main {
   flex: 1;
   min-width: 0;
-  padding: 36px 40px 56px;
+  padding: 28px 32px 48px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 /* ----- Menu do computador ----- */
 .navDesk {
   flex: none;
-  width: 260px;
+  width: 232px;
   position: sticky;
   top: 0;
   height: 100vh;
   overflow-y: auto;
   background: #0e0f15;
   color: #fff;
-  padding: 28px 20px;
+  padding: 24px 16px;
   display: flex;
   flex-direction: column;
   gap: 24px;
   --foco: #f3901f;
 }
 .marca { display: flex; align-items: flex-end; gap: 10px; text-decoration: none; color: inherit; min-height: 44px; }
-.logo { height: 30px; width: auto; display: block; }
-.marcaHub { font-size: 12px; font-weight: 600; letter-spacing: 1.4px; color: #c9d0d6; padding-bottom: 2px; }
+.logo { height: 26px; width: auto; display: block; }
+.marcaHub { font-size: 11px; font-weight: 600; letter-spacing: 1.4px; color: #c9d0d6; padding-bottom: 2px; }
 
 .grupo { display: flex; flex-direction: column; gap: 8px; }
-.rotulo { font-size: 12px; letter-spacing: 1.4px; text-transform: uppercase; font-weight: 600; color: #c9d0d6; }
+.rotulo { font-size: 11px; letter-spacing: 1.4px; text-transform: uppercase; font-weight: 600; color: #c9d0d6; }
 .ambientes { display: flex; gap: 6px; }
 .amb {
   flex: 1;
   min-height: 44px;
   border-radius: 12px;
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   background: transparent;
@@ -60,7 +60,7 @@
   padding: 0 14px;
   border-radius: 14px;
   font: inherit;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   text-decoration: none;
   color: #fff;
@@ -82,7 +82,7 @@
   padding: 0 10px;
   border-radius: 10px;
   font: inherit;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   background: transparent;
@@ -106,7 +106,7 @@
 .summary::-webkit-details-marker { display: none; }
 .logoMob { height: 24px; width: auto; display: block; }
 .summaryDir { display: flex; align-items: center; gap: 10px; }
-.badge { padding: 4px 10px; border-radius: 12px; background: #f3901f; color: #0e0f15; font-size: 12px; font-weight: 700; }
+.badge { padding: 4px 10px; border-radius: 12px; background: #f3901f; color: #0e0f15; font-size: 11px; font-weight: 700; }
 .botaoMenu {
   display: inline-flex;
   align-items: center;
@@ -114,7 +114,7 @@
   padding: 0 16px;
   border: 1px solid #3a4650;
   border-radius: 22px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 .gaveta { padding: 4px 16px 20px; display: flex; flex-direction: column; gap: 16px; }

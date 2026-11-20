@@ -31,3 +31,5 @@ Sistema de gestão da Lúdica (HUB, MUSIC, MKT). Construído e mantido pelo Bob 
 - Cores da logo: preto #0E0F15 e laranja #F3901F; vinho #7B1418 e creme #F7F1E6. Laranja nunca é texto nem linha fina sobre fundo claro.
 - Acessível: botões de verdade, alvos de 44px, texto com contraste 4,5:1, bordas de campo 3:1, foco visível.
 - No celular: menu recolhível, tabelas viram cartões, formulários em uma coluna.
+- Tamanhos compactos (decisão de 19/11): texto 13–14px, títulos de página 24px, botões e campos com 44px de altura. Não aumentar sem falar com o Bob.
+- Carregando: todo clique que busca algo no servidor mostra a nave da Lúdica girando junto do cursor (`src/app/carregando.tsx`, já ligado para links internos e botões de enviar). Não criar outro indicador; para um clique que não deve mostrar, use `data-sem-carregar`; para um elemento que deve mostrar e não é link nem botão, `data-carrega`.

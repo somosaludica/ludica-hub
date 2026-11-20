@@ -1,0 +1,55 @@
+/* Nave girando junto do cursor enquanto algo carrega. Pílula preta para aparecer sobre qualquer fundo. */
+.caixa {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  pointer-events: none;
+  padding: 8px 11px;
+  border-radius: 16px;
+  background: #0e0f15;
+  border: 1px solid #3a4650;
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(14, 15, 21, 0.25);
+  opacity: 0;
+  transition: opacity 0.12s;
+  will-change: transform;
+}
+/* Só aparece se demorar mais que um piscar: cliques instantâneos não piscam a nave. */
+.caixa[data-ativo] { opacity: 1; transition-delay: 0.1s; }
+
+.nave { display: block; width: 58px; height: auto; overflow: visible; }
+
+/* A estrela gira e os anéis acendem de dentro para fora, em laranja. */
+.nave [data-estrela] { transform-origin: 97px 24px; transform-box: view-box; }
+.caixa[data-ativo] .nave [data-estrela] { animation: gira 0.9s linear infinite; color: #f3901f; }
+.caixa[data-ativo] .nave [data-anel] { animation: acende 1.2s ease-in-out infinite; }
+.caixa[data-ativo] .nave [data-anel="2"] { animation-delay: 0.15s; }
+.caixa[data-ativo] .nave [data-anel="3"] { animation-delay: 0.3s; }
+.caixa[data-ativo] .nave [data-anel="4"] { animation-delay: 0.45s; }
+
+@keyframes gira { to { transform: rotate(360deg); } }
+@keyframes acende {
+  0%, 100% { stroke: #ffffff; }
+  40% { stroke: #f3901f; }
+}
+
+/* Quem prefere menos movimento vê a nave pulsando devagar, sem girar. */
+@media (prefers-reduced-motion: reduce) {
+  .caixa[data-ativo] .nave [data-estrela],
+  .caixa[data-ativo] .nave [data-anel] { animation: none; }
+  .caixa[data-ativo] .nave { animation: pulsa 1.6s ease-in-out infinite; }
+  @keyframes pulsa { 50% { opacity: 0.5; } }
+}
+
+/* Cursor do sistema também indica espera. */
+.ocupado, .ocupado * { cursor: progress !important; }
+
+.leitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
