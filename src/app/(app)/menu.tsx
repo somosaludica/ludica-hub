@@ -108,7 +108,7 @@ export default function Menu({ itens, ambientes, ambiente, tema, idioma, t }: Pr
 
   return (
     <>
-      <details ref={gaveta} className={styles.navMob}>
+      <details ref={gaveta} className={styles.navMob} data-nao-imprime="">
         <summary className={styles.summary}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo-claro.png" alt="Lúdica" className={styles.logoMob} />
@@ -124,7 +124,7 @@ export default function Menu({ itens, ambientes, ambiente, tema, idioma, t }: Pr
         </nav>
       </details>
 
-      <nav aria-label={t.menuPrincipal} className={styles.navDesk}>
+      <nav aria-label={t.menuPrincipal} className={styles.navDesk} data-nao-imprime="">
         <Link href="/" className={styles.marca}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo-claro.png" alt="Lúdica" className={styles.logo} />

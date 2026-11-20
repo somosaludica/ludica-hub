@@ -148,6 +148,78 @@ set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000001';
 select teste.igual((select count(*) from clientes), 2, 'Bob vê o cliente que o comercial cadastrou');
 select teste.igual((select count(*) from leads), 2, 'Bob vê todos os leads');
 
+-- ================= Orçamentos (fase 2) =================
+-- Comercial (HUB e MUSIC) pede orçamento para o cliente dele.
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000004';
+insert into orcamentos (id, ambiente_id, cliente_id, situacao, desconto_categoria, desconto_motivo)
+  values ('30000000-0000-0000-0000-000000000001', 'music', '10000000-0000-0000-0000-000000000002', 'pedido', 'parceiro', 'parceiro antigo');
+insert into orcamento_itens (orcamento_id, servico_id, descricao, unidade, quantidade, valor_unitario)
+  select '30000000-0000-0000-0000-000000000001', id, 'nome inventado', 'unitario', 2, 1 from servicos where ambiente_id = 'music' and nome = 'Master';
+select teste.igual((select count(*) from orcamento_itens where descricao = 'Master' and valor_unitario = 500 and unidade = 'por_faixa'), 1,
+  'No pedido do comercial, nome, unidade e preço vêm da tabela');
+select teste.igual((select count(*) from servicos where nome = 'Mix'), 0, 'Mix segue oculto para o comercial');
+select teste.bloqueado($$insert into orcamentos (ambiente_id, cliente_id, situacao) values ('music', '10000000-0000-0000-0000-000000000002', 'rascunho')$$,
+  'Comercial não cria orçamento direto, só pedido');
+select teste.bloqueado($$insert into orcamentos (ambiente_id, cliente_id, situacao) values ('music', '10000000-0000-0000-0000-000000000001', 'pedido')$$,
+  'Comercial não pede orçamento para cliente de outra pessoa');
+select teste.bloqueado($$insert into orcamentos (ambiente_id, cliente_id, situacao) values ('mkt', '10000000-0000-0000-0000-000000000002', 'pedido')$$,
+  'Comercial não pede orçamento em ambiente sem acesso');
+update orcamentos set situacao = 'rascunho' where id = '30000000-0000-0000-0000-000000000001';
+select teste.igual((select count(*) from orcamentos where situacao = 'pedido'), 1, 'Comercial não muda a situação do pedido');
+select teste.bloqueado($$insert into orcamento_itens (orcamento_id, servico_id, descricao, unidade, quantidade, valor_unitario)
+  select '30000000-0000-0000-0000-000000000001', id, 'x', 'unitario', 1, 1 from servicos where ambiente_id = 'hub' limit 1$$,
+  'Item precisa ser de serviço do mesmo ambiente');
+
+-- Administrativo monta: preço próprio vale, desconto precisa de sócio para enviar.
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000003';
+select teste.igual((select count(*) from orcamentos), 1, 'Administrativo vê o pedido do comercial');
+select teste.igual((select numero from orcamentos where id = '30000000-0000-0000-0000-000000000001')::bigint, 1, 'Numeração começa em 1 no ambiente');
+update orcamentos set situacao = 'rascunho', desconto_percentual = 10 where id = '30000000-0000-0000-0000-000000000001';
+update orcamento_itens set valor_unitario = 450 where orcamento_id = '30000000-0000-0000-0000-000000000001';
+select teste.igual((select count(*) from orcamento_itens where valor_unitario = 450), 1, 'Quem monta ajusta o preço no orçamento');
+select teste.bloqueado($$update orcamentos set situacao = 'enviado' where id = '30000000-0000-0000-0000-000000000001'$$,
+  'Administrativo não envia desconto acima do limite sem sócio');
+select teste.bloqueado($$update orcamentos set situacao = 'aprovado' where id = '30000000-0000-0000-0000-000000000001'$$,
+  'Rascunho não pula direto para aprovado');
+select teste.bloqueado($$delete from orcamento_eventos$$, 'Histórico do orçamento não é apagado');
+
+-- Sócio envia; conteúdo trava; aprovar fecha o lead.
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000001';
+update orcamentos set lead_id = (select id from leads where cliente_id = '10000000-0000-0000-0000-000000000002' and ambiente_id = 'music' limit 1)
+  where id = '30000000-0000-0000-0000-000000000001';
+update leads set etapa = 'em_contato' where id = '20000000-0000-0000-0000-000000000002';
+update orcamentos set situacao = 'enviado' where id = '30000000-0000-0000-0000-000000000001';
+select teste.igual((select count(*) from orcamentos where situacao = 'enviado' and validade_ate is not null and enviado_em is not null), 1,
+  'Enviar grava a data e a validade');
+select teste.igual((select count(*) from leads l join orcamentos o on o.lead_id = l.id where o.id = '30000000-0000-0000-0000-000000000001' and l.etapa = 'proposta_enviada'), 1,
+  'Enviar a proposta move o lead para Proposta enviada');
+select teste.bloqueado($$update orcamentos set desconto_percentual = 50 where id = '30000000-0000-0000-0000-000000000001'$$,
+  'Proposta enviada não tem o conteúdo alterado');
+select teste.bloqueado($$update orcamento_itens set valor_unitario = 1 where orcamento_id = '30000000-0000-0000-0000-000000000001'$$,
+  'Itens de proposta enviada não mudam');
+update orcamentos set situacao = 'aprovado' where id = '30000000-0000-0000-0000-000000000001';
+select teste.igual((select count(*) from leads l join orcamentos o on o.lead_id = l.id where o.id = '30000000-0000-0000-0000-000000000001' and l.etapa = 'fechado'), 1,
+  'Aprovar a proposta fecha o lead');
+select teste.igual((select count(*) from orcamento_eventos where orcamento_id = '30000000-0000-0000-0000-000000000001'), 4,
+  'Cada passagem do orçamento fica no histórico');
+with d as (delete from orcamentos where id = '30000000-0000-0000-0000-000000000001' returning 1)
+  select teste.igual((select count(*) from d), 0, 'Orçamento aprovado não é apagado');
+
+-- Quem não deve ver.
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000004';
+select teste.igual((select count(*) from orcamentos), 1, 'Comercial acompanha o próprio pedido');
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000005';
+select teste.igual((select count(*) from orcamentos), 0, 'Pauta não vê orçamentos');
+select teste.igual((select count(*) from orcamento_itens), 0, 'Pauta não vê valores de orçamento');
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000002';
+insert into orcamentos (id, ambiente_id, cliente_id) values ('30000000-0000-0000-0000-000000000002', 'hub', '10000000-0000-0000-0000-000000000001');
+select teste.bloqueado($$insert into orcamentos (ambiente_id, cliente_id) values ('mkt', '10000000-0000-0000-0000-000000000001')$$,
+  'Rafa não cria orçamento no MKT');
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000001';
+insert into orcamentos (id, ambiente_id, cliente_id) values ('30000000-0000-0000-0000-000000000003', 'mkt', '10000000-0000-0000-0000-000000000001');
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000002';
+select teste.igual((select count(*) from orcamentos), 2, 'Rafa vê orçamentos de HUB e MUSIC, não os do MKT');
+
 -- ================= Logado sem cadastro (conta criada por fora do convite) =================
 set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000ff';
 select teste.igual((select count(*) from servicos), 0, 'Conta sem cadastro não vê serviços');

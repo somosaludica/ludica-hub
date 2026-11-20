@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { contexto, exigePerfil, nomeAmbiente } from "@/lib/contexto";
 import { textos } from "@/lib/i18n";
 import FormServico, { type Servico, type TextosForm } from "./form";
-import { removerServico } from "../acoes";
+import { removerServico, salvarConteudoProposta } from "../acoes";
+import FormAcao, { BotaoEnviar } from "@/componentes/form-acao";
 
 /** Criar (/servicos/novo) ou editar um serviço do ambiente aberto. */
 export default async function PaginaServico({
@@ -12,11 +13,11 @@ export default async function PaginaServico({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ erro?: string }>;
+  searchParams: Promise<{ erro?: string; conteudo?: string }>;
 }) {
   const ctx = await contexto();
   exigePerfil(ctx, ["socio", "administrativo"]);
-  const [{ id }, { erro }] = await Promise.all([params, searchParams]);
+  const [{ id }, { erro, conteudo }] = await Promise.all([params, searchParams]);
   const novo = id === "novo";
   const t = textos(ctx.idioma);
   const tf: TextosForm = {
@@ -34,7 +35,7 @@ export default async function PaginaServico({
       ? Promise.resolve({ data: null })
       : supabase
           .from("servicos")
-          .select("id, categoria, nome, valor, unidade, prazo_minimo_meses, complemento, visivel_comercial, ativo, observacao_interna")
+          .select("*")
           .eq("id", id)
           .eq("ambiente_id", ctx.ambiente!)
           .maybeSingle(),
@@ -66,6 +67,75 @@ export default async function PaginaServico({
       <div className="aviso" style={{ maxWidth: 760 }}>
         {t.avisoServico}
       </div>
+
+      {!novo && atual && (
+        <div id="conteudo" style={{ display: "contents" }}>
+          {conteudo && (
+            <div className="aviso ok" role="status" style={{ maxWidth: 760 }}>
+              {t.conteudoSalvo}
+            </div>
+          )}
+          <FormAcao acao={salvarConteudoProposta}>
+            <input type="hidden" name="id" value={id} />
+            <fieldset className="secao">
+              <legend>{t.conteudoProposta}</legend>
+              <p className="dica" style={{ margin: 0 }}>
+                {t.notaConteudo}
+              </p>
+              <div>
+                <label className="campo" htmlFor="proposta_titulo">
+                  {t.tituloProjeto}
+                </label>
+                <input id="proposta_titulo" name="proposta_titulo" className="entrada" defaultValue={atual.proposta_titulo ?? ""} />
+              </div>
+              {(
+                [
+                  ["proposta_descricao", t.descricaoProjeto, 3, false],
+                  ["proposta_incluso", t.incluso, 6, true],
+                  ["proposta_nao_incluso", t.naoIncluso, 4, true],
+                  ["proposta_opcionais", t.opcionais, 4, true],
+                  ["proposta_workflow", t.workflow, 5, true],
+                ] as const
+              ).map(([nome, rotulo, linhasCampo, lista]) => (
+                <div key={nome}>
+                  <label className="campo" htmlFor={nome}>
+                    {rotulo}
+                  </label>
+                  <textarea id={nome} name={nome} className="entrada" rows={linhasCampo} defaultValue={(atual[nome] as string | null) ?? ""} aria-describedby={lista ? `${nome}-dica` : undefined} />
+                  {lista && (
+                    <div id={`${nome}-dica`} className="dica">
+                      {t.umPorLinha}
+                    </div>
+                  )}
+                </div>
+              ))}
+              <div className="linha-3">
+                <div>
+                  <label className="campo" htmlFor="proposta_prazo">
+                    {t.prazoPadrao}
+                  </label>
+                  <input id="proposta_prazo" name="proposta_prazo" className="entrada" defaultValue={atual.proposta_prazo ?? ""} />
+                </div>
+                <div>
+                  <label className="campo" htmlFor="proposta_pagamento">
+                    {t.pagamentoPadrao}
+                  </label>
+                  <input id="proposta_pagamento" name="proposta_pagamento" className="entrada" defaultValue={atual.proposta_pagamento ?? ""} />
+                </div>
+                <div>
+                  <label className="campo" htmlFor="proposta_validade">
+                    {t.validadePadrao}
+                  </label>
+                  <input id="proposta_validade" name="proposta_validade" className="entrada" inputMode="numeric" placeholder="7" defaultValue={(atual.proposta_validade ?? "").match(/\d+/)?.[0] ?? ""} />
+                </div>
+              </div>
+            </fieldset>
+            <div className="acoes">
+              <BotaoEnviar rotulo={t.salvar} enviando={t.salvando} />
+            </div>
+          </FormAcao>
+        </div>
+      )}
 
       {!novo && ctx.perfil === "socio" && (
         <details className="cartao" style={{ maxWidth: 760 }}>

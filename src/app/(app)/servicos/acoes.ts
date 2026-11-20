@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { contexto } from "@/lib/contexto";
 import { lerReais, UNIDADES, type Unidade } from "@/lib/formatos";
 import { textos } from "@/lib/i18n";
+import { campo, falha, opcional } from "@/lib/form";
+import type { Estado as EstadoForm } from "@/componentes/form-acao";
 
 /** Em caso de erro, devolve o que foi digitado para o formulário não voltar vazio. */
 export type Estado = { erro?: string; valores?: Record<string, string>; n?: number };
@@ -72,6 +74,35 @@ async function salvar(f: FormData): Promise<Estado> {
   if (!gravado?.length) return { erro: t.erroSemPermissao };
   revalidatePath("/servicos");
   redirect("/servicos?salvo=1");
+}
+
+/** Textos que entram sozinhos na proposta quando o serviço é escolhido. */
+export async function salvarConteudoProposta(_: EstadoForm, f: FormData): Promise<EstadoForm> {
+  const ctx = await contexto();
+  const t = textos(ctx.idioma);
+  if (ctx.perfil !== "socio" && ctx.perfil !== "administrativo") return falha(f, t.erroSemPermissao);
+  const id = campo(f, "id");
+  const dias = campo(f, "proposta_validade");
+  if (dias && !/^\d{1,3}$/.test(dias)) return falha(f, t.erroValidade);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("servicos")
+    .update({
+      proposta_titulo: opcional(f, "proposta_titulo"),
+      proposta_descricao: opcional(f, "proposta_descricao"),
+      proposta_incluso: opcional(f, "proposta_incluso"),
+      proposta_nao_incluso: opcional(f, "proposta_nao_incluso"),
+      proposta_opcionais: opcional(f, "proposta_opcionais"),
+      proposta_workflow: opcional(f, "proposta_workflow"),
+      proposta_prazo: opcional(f, "proposta_prazo"),
+      proposta_pagamento: opcional(f, "proposta_pagamento"),
+      proposta_validade: dias || null,
+    })
+    .eq("id", id)
+    .eq("ambiente_id", ctx.ambiente!)
+    .select("id");
+  if (error || !data?.length) return falha(f, t.erroSalvar);
+  redirect(`/servicos/${id}?conteudo=1#conteudo`);
 }
 
 /** Remove um serviço. Só sócio (regra do banco). Para tirar de uso sem apagar, use "Ativo". */

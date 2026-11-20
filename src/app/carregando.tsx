@@ -122,7 +122,7 @@ export default function Carregando({ texto }: { texto: string }) {
 
   return (
     <>
-      <div ref={caixa} className={styles.caixa} data-ativo={ativo || undefined}>
+      <div ref={caixa} className={styles.caixa} data-ativo={ativo || undefined} data-nao-imprime="">
         <Nave className={styles.nave} />
       </div>
       <span className={styles.leitor} role="status" aria-live="polite">

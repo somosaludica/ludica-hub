@@ -60,6 +60,11 @@ export default async function PaginaLead({
           <h1>{novo ? t.novoLead : nomeCliente}</h1>
         </div>
         <div className="acoes">
+          {l && l.etapa !== "perdido" && (
+            <Link href={`/orcamentos/novo?lead=${l.id}`} className="btn">
+              {comercial ? t.pedirOrcamento : t.novoOrcamento}
+            </Link>
+          )}
           {l && (
             <Link href={`/clientes/${l.cliente_id}`} className="btn fantasma">
               {t.cliente}
