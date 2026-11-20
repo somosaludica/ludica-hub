@@ -50,3 +50,12 @@ test("lê valores digitados em reais", async () => {
   assert.equal(lerReais("-10"), null);
   assert.equal(reaisCampo(1500), "1.500,00");
 });
+
+test("hoje em São Paulo não vira o dia antes da hora", async () => {
+  const { hojeSP, dataCurta } = await import("../src/lib/formatos.ts");
+  // 01:30 UTC do dia 20 ainda é dia 19 em São Paulo (UTC-3)
+  assert.equal(hojeSP(new Date("2026-11-20T01:30:00Z")).toISOString().slice(0, 10), "2026-11-19");
+  assert.equal(hojeSP(new Date("2026-11-20T03:30:00Z")).toISOString().slice(0, 10), "2026-11-20");
+  assert.equal(dataCurta("1990-03-07"), "07/03");
+  assert.equal(dataCurta("1990-03-07", true), "07/03/1990");
+});

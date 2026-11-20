@@ -6,6 +6,6 @@ import FormLogin from "./form";
 export default async function Login() {
   const [store, cab] = await Promise.all([cookies(), headers()]);
   const t = textos(idiomaDoPedido(store.get(IDIOMA_COOKIE)?.value, cab.get("accept-language")));
-  const { unidades: _u, perfis: _p, servicosNaTabela: _a, servicosAtivos: _b, minMeses: _c, ...simples } = t;
-  return <FormLogin t={simples} />;
+  const simples = Object.fromEntries(Object.entries(t).filter(([, v]) => typeof v === "string")) as Record<string, string>;
+  return <FormLogin t={simples as never} />;
 }

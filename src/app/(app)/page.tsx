@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { contexto, AMBIENTES, type AmbienteId } from "@/lib/contexto";
+import Link from "next/link";
+import { diasAteAniversario, hojeSP } from "@/lib/formatos";
 import { textos } from "@/lib/i18n";
 import { trocarAmbiente } from "./acoes";
 
@@ -16,6 +18,17 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
   const { data: servicos } = await supabase.from("servicos").select("ambiente_id").eq("ativo", true);
   const qtd = (id: AmbienteId) => (servicos ?? []).filter((s) => s.ambiente_id === id).length;
   const meus = AMBIENTES.filter((a) => ctx.acessos[a.id]);
+
+  // Aniversários da semana: aviso para os sócios.
+  let aniversarios: { id: string; nome: string; dias: number }[] = [];
+  if (ctx.socioAlgum) {
+    const { data: comData } = await supabase.from("clientes").select("id, nome, nascimento").not("nascimento", "is", null);
+    const hoje = hojeSP();
+    aniversarios = (comData ?? [])
+      .map((c) => ({ id: c.id as string, nome: c.nome as string, dias: diasAteAniversario(c.nascimento as string, hoje) }))
+      .filter((c) => c.dias <= 7)
+      .sort((a, b) => a.dias - b.dias);
+  }
   const descricao: Record<AmbienteId, string> = { hub: t.descHub, music: t.descMusic, mkt: t.descMkt };
 
   return (
@@ -32,6 +45,21 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
       {sp["sem-acesso"] && (
         <div className="aviso" role="status">
           {t.paginaSemAcesso}
+        </div>
+      )}
+
+      {aniversarios.length > 0 && (
+        <div className="cartao pilha">
+          <div className="rotulo">{t.aniversarios}</div>
+          <ul className="lista-linhas">
+            {aniversarios.map((c) => (
+              <li key={c.id}>
+                <Link href={`/clientes/${c.id}`}>
+                  {c.dias === 0 ? t.aniversarioHoje(c.nome) : c.dias === 1 ? t.aniversarioAmanha(c.nome) : t.aniversarioSemana(c.nome, c.dias)}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

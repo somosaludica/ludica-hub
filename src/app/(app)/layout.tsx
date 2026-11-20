@@ -15,7 +15,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   // Só entram no menu as telas prontas e abertas ao perfil no ambiente atual.
   const itens: ItemMenu[] = [{ href: "/", rotulo: t.inicio }];
-  if (p === "socio" || p === "administrativo" || p === "comercial") itens.push({ href: "/servicos", rotulo: t.servicos });
+  if (p === "socio" || p === "administrativo" || p === "comercial") {
+    itens.push({ href: "/leads", rotulo: t.leads }, { href: "/clientes", rotulo: t.clientes }, { href: "/servicos", rotulo: t.servicos });
+  }
+  if (ctx.socioAlgum) itens.push({ href: "/usuarios", rotulo: t.usuarios });
 
   const ambientes = AMBIENTES.filter((a) => ctx.acessos[a.id]);
 

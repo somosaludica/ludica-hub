@@ -88,12 +88,19 @@ select teste.igual((select count(*) from acessos where ambiente_id = 'mkt'), 0, 
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000003';
 select teste.igual((select count(*) from servicos), 41, 'Administrativo vê os serviços dos seus ambientes');
 select teste.igual((select count(*) from clientes), 1, 'Administrativo vê todo o cadastro de clientes');
+select teste.igual((select count(*) from perfis), 6, 'Administrativo vê as pessoas do time (para atribuir leads)');
+update perfis set ativo = false where id = '00000000-0000-0000-0000-000000000004';
+select teste.igual((select count(*) from perfis where id = '00000000-0000-0000-0000-000000000004' and ativo), 1, 'Administrativo não desativa ninguém');
+select teste.bloqueado($$insert into leads (cliente_id, ambiente_id, responsavel_id) values ('10000000-0000-0000-0000-000000000001', 'mkt', '00000000-0000-0000-0000-000000000004')$$,
+  'Lead não pode ter responsável sem acesso ao ambiente');
+select teste.bloqueado($$insert into leads (cliente_id, ambiente_id, responsavel_id) values ('10000000-0000-0000-0000-000000000001', 'music', '00000000-0000-0000-0000-000000000005')$$,
+  'Pauta não pode ser responsável por lead');
+select teste.bloqueado($$update leads set etapa = 'perdido' where id = '20000000-0000-0000-0000-000000000001'$$, 'Lead perdido exige motivo');
 select teste.igual((select count(*) from leads), 1, 'Administrativo vê os leads dos seus ambientes');
 with u as (delete from servicos where nome = 'Master' returning 1)
   select teste.igual((select count(*) from u), 0, 'Administrativo não apaga serviço');
 with u as (update ambiente_dados set cnpj = '1' returning 1)
   select teste.igual((select count(*) from u), 0, 'Administrativo não altera os dados do emissor');
-select teste.igual((select count(*) from perfis), 1, 'Administrativo vê só o próprio perfil');
 
 -- ================= Comercial (HUB e MUSIC) =================
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000004';

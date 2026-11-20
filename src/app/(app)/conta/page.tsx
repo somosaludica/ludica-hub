@@ -21,6 +21,16 @@ async function salvarConta(f: FormData) {
   redirect(error ? "/conta?erro=1" : "/conta?salvo=1");
 }
 
+async function definirSenha(f: FormData) {
+  "use server";
+  await contexto();
+  const senha = String(f.get("senha") ?? "");
+  if (senha.length < 8) redirect("/conta?erro=senha");
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password: senha });
+  redirect(error ? "/conta?erro=senha" : "/conta?salvo=senha");
+}
+
 /** Minha conta: nome, tema e idioma da interface. Cada pessoa altera só a sua. */
 export default async function Conta({ searchParams }: { searchParams: Promise<{ salvo?: string; erro?: string }> }) {
   const [ctx, sp] = await Promise.all([contexto(), searchParams]);
@@ -38,12 +48,12 @@ export default async function Conta({ searchParams }: { searchParams: Promise<{ 
 
       {sp.salvo && (
         <div className="aviso ok" role="status">
-          {t.preferenciasSalvas}
+          {sp.salvo === "senha" ? t.senhaSalva : t.preferenciasSalvas}
         </div>
       )}
       {sp.erro && (
         <div className="aviso erro" role="alert">
-          {t.erroConta}
+          {sp.erro === "senha" ? t.erroSenha : t.erroConta}
         </div>
       )}
 
@@ -80,6 +90,26 @@ export default async function Conta({ searchParams }: { searchParams: Promise<{ 
         <div className="acoes">
           <button type="submit" className="btn">
             {t.salvar}
+          </button>
+        </div>
+      </form>
+
+      <form action={definirSenha} className="cartao form">
+        <div className="rotulo">{t.senhaTitulo}</div>
+        <div className="linha-2">
+          <div>
+            <label className="campo" htmlFor="senha">
+              {t.novaSenha}
+            </label>
+            <input id="senha" name="senha" type="password" className="entrada" required minLength={8} autoComplete="new-password" aria-describedby="senha-dica" />
+            <div id="senha-dica" className="dica">
+              {t.dicaSenha}
+            </div>
+          </div>
+        </div>
+        <div className="acoes">
+          <button type="submit" className="btn fantasma">
+            {t.definirSenha}
           </button>
         </div>
       </form>

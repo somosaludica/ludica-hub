@@ -7,7 +7,7 @@ import { REMEMBER_COOKIE, REMEMBER_MAX_AGE } from "@/lib/supabase/cookies";
 import styles from "./login.module.css";
 import type { Textos } from "@/lib/i18n";
 
-type T = Omit<Textos, "unidades" | "perfis" | "servicosNaTabela" | "servicosAtivos" | "minMeses">;
+type T = { [K in keyof Textos as Textos[K] extends string ? K : never]: string };
 
 type Estado = { tipo: "form" } | { tipo: "link-enviado" } | { tipo: "erro"; msg: string };
 

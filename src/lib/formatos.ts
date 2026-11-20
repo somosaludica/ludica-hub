@@ -103,3 +103,16 @@ export function reaisCampo(valor: number | null | undefined): string {
   if (valor == null) return "";
   return valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+
+/** "Hoje" em São Paulo, como data UTC à meia-noite (o servidor roda em UTC). */
+export function hojeSP(agora: Date = new Date()): Date {
+  const dia = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(agora);
+  return new Date(`${dia}T00:00:00Z`);
+}
+
+/** "1990-03-07" -> "07/03" (aniversário) ou "07/03/1990". */
+export function dataCurta(iso: string | null, comAno = false): string {
+  if (!iso) return "";
+  const [a, m, d] = iso.slice(0, 10).split("-");
+  return comAno ? `${d}/${m}/${a}` : `${d}/${m}`;
+}
