@@ -23,6 +23,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       { href: "/servicos", rotulo: t.servicos },
     );
   }
+  if (p === "socio" || p === "administrativo") itens.splice(3, 0, { href: "/cobrancas", rotulo: t.cobrancas });
   if (ctx.socioAlgum) itens.push({ href: "/usuarios", rotulo: t.usuarios });
 
   const ambientes = AMBIENTES.filter((a) => ctx.acessos[a.id]);

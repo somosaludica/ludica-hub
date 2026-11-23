@@ -7,7 +7,7 @@ test("todo texto existe e não está vazio nos três idiomas", () => {
     const t = textos(idioma) as Record<string, unknown>;
     for (const [chave, valor] of Object.entries(t)) {
       if (typeof valor === "string") assert.ok(valor.trim(), `${idioma}.${chave} vazio`);
-      else if (typeof valor === "function") assert.ok(String((valor as (...a: unknown[]) => string)(2, 3)).trim(), `${idioma}.${chave}`);
+      else if (typeof valor === "function") assert.ok(String((valor as (...a: unknown[]) => string)(2, 3, "c", "d", "e")).trim(), `${idioma}.${chave}`);
       else for (const [k, v] of Object.entries(valor as Record<string, string>)) assert.ok(v.trim(), `${idioma}.${chave}.${k}`);
     }
   }

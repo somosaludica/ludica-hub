@@ -136,6 +136,16 @@ export default async function Proposta({
         </div>
       )}
 
+      {gestor && situacao === "aprovado" && (
+        <div className="cartao pilha nao-imprime" style={{ maxWidth: 820 }}>
+          <div className="acoes">
+            <Link href={`/orcamentos/${id}/parcelas`} className="btn">
+              {t.planoPagamento}
+            </Link>
+          </div>
+        </div>
+      )}
+
       {gestor && situacao === "recusado" && (
         <div className="cartao pilha nao-imprime" style={{ maxWidth: 820 }}>
           {o.motivo_recusa && (

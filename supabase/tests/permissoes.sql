@@ -99,8 +99,8 @@ select teste.bloqueado($$update leads set etapa = 'perdido' where id = '20000000
 select teste.igual((select count(*) from leads), 1, 'Administrativo vê os leads dos seus ambientes');
 with u as (delete from servicos where nome = 'Master' returning 1)
   select teste.igual((select count(*) from u), 0, 'Administrativo não apaga serviço');
-with u as (update ambiente_dados set cnpj = '1' returning 1)
-  select teste.igual((select count(*) from u), 0, 'Administrativo não altera os dados do emissor');
+with u as (update ambiente_dados set endereco = endereco returning 1)
+  select teste.igual((select count(*) from u), 3, 'Administrativo alcança os dados do emissor dos ambientes dele (regra da 0006)');
 
 -- ================= Comercial (HUB e MUSIC) =================
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000004';
@@ -240,6 +240,49 @@ set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000001';
 insert into orcamentos (id, ambiente_id, cliente_id) values ('30000000-0000-0000-0000-000000000003', 'mkt', '10000000-0000-0000-0000-000000000001');
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000002';
 select teste.igual((select count(*) from orcamentos), 2, 'Rafa vê orçamentos de HUB e MUSIC, não os do MKT');
+
+-- ================= Cobranças (fase 3) =================
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000003';
+insert into cobrancas (id, ambiente_id, cliente_id, orcamento_id, descricao, parcela, parcelas, vencimento, valor) values
+  ('40000000-0000-0000-0000-000000000001', 'music', '10000000-0000-0000-0000-000000000002', '30000000-0000-0000-0000-000000000001', 'Master · parcela 1 de 2', 1, 2, '2026-12-01', 250),
+  ('40000000-0000-0000-0000-000000000002', 'music', '10000000-0000-0000-0000-000000000002', '30000000-0000-0000-0000-000000000001', 'Master · parcela 2 de 2', 2, 2, '2027-01-01', 250);
+select teste.igual((select sum(numero) from cobrancas)::bigint, 3, 'Notas de débito numeradas em sequência no ambiente (1 e 2)');
+select teste.bloqueado($$insert into cobrancas (ambiente_id, cliente_id, orcamento_id, descricao, vencimento, valor) values ('music', '10000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', 'x', '2026-12-01', 10)$$,
+  'Cobrança precisa ser do cliente da proposta');
+select teste.bloqueado($$insert into cobrancas (ambiente_id, cliente_id, orcamento_id, descricao, vencimento, valor) values ('hub', '10000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000002', 'x', '2026-12-01', 10)$$,
+  'Proposta que não foi aprovada não gera cobrança');
+select teste.bloqueado($$update cobrancas set situacao = 'paga' where id = '40000000-0000-0000-0000-000000000001'$$, 'Baixa exige data e valor recebido');
+update cobrancas set situacao = 'paga', pago_em = '2026-11-30', valor_recebido = 250 where id = '40000000-0000-0000-0000-000000000001';
+select teste.igual((select count(*) from cobranca_eventos where tipo = 'baixa'), 1, 'A baixa fica no histórico');
+select teste.bloqueado($$update cobrancas set valor = 1 where id = '40000000-0000-0000-0000-000000000001'$$, 'Cobrança paga não tem o valor alterado');
+select teste.bloqueado($$update cobrancas set situacao = 'aberta' where id = '40000000-0000-0000-0000-000000000001'$$, 'Administrativo não estorna baixa');
+update cobrancas set nf_situacao = 'emitida', nf_numero = '123' where id = '40000000-0000-0000-0000-000000000001';
+select teste.igual((select count(*) from cobrancas where nf_numero = '123'), 1, 'Nota fiscal pode ser registrada depois da baixa');
+insert into cobranca_eventos (cobranca_id, tipo, canal, por) values ('40000000-0000-0000-0000-000000000002', 'envio_manual', 'whatsapp', '00000000-0000-0000-0000-000000000001');
+select teste.igual((select count(*) from cobranca_eventos where tipo = 'envio_manual' and por = '00000000-0000-0000-0000-000000000003'), 1,
+  'Envio manual é registrado em nome de quem enviou');
+select teste.bloqueado($$insert into cobranca_eventos (cobranca_id, tipo) values ('40000000-0000-0000-0000-000000000002', 'baixa')$$, 'Baixa não é forjada no histórico');
+select teste.bloqueado($$delete from cobranca_eventos$$, 'Histórico da cobrança não é apagado');
+update ambiente_dados set conta_recebimento = 'PIX teste' where ambiente_id = 'music';
+select teste.igual((select count(*) from ambiente_dados where conta_recebimento = 'PIX teste'), 1, 'Administrativo preenche os dados de pagamento da nota');
+select teste.bloqueado($$update ambiente_dados set desconto_sem_socio = 100 where ambiente_id = 'music'$$, 'Administrativo não aumenta o próprio limite de desconto');
+
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000004';
+select teste.igual((select count(*) from cobrancas), 0, 'Comercial não vê cobranças');
+select teste.bloqueado($$insert into cobrancas (ambiente_id, cliente_id, descricao, vencimento, valor) values ('music', '10000000-0000-0000-0000-000000000002', 'x', '2026-12-01', 10)$$,
+  'Comercial não cria cobrança');
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000005';
+select teste.igual((select count(*) from cobrancas), 0, 'Pauta não vê cobranças');
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000001';
+insert into cobrancas (ambiente_id, cliente_id, descricao, vencimento, valor) values ('mkt', '10000000-0000-0000-0000-000000000001', 'Avulsa MKT', '2026-12-10', 900);
+update cobrancas set situacao = 'aberta' where id = '40000000-0000-0000-0000-000000000001';
+select teste.igual((select count(*) from cobranca_eventos where tipo = 'estorno'), 1, 'Sócio estorna a baixa e isso fica no histórico');
+with d as (delete from cobrancas where id = '40000000-0000-0000-0000-000000000002' returning 1)
+  select teste.igual((select count(*) from d), 1, 'Sócio apaga cobrança que nunca foi paga');
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000002';
+select teste.igual((select count(*) from cobrancas), 1, 'Rafa vê as cobranças do MUSIC, não as do MKT');
+select teste.bloqueado($$insert into cobrancas (ambiente_id, cliente_id, descricao, vencimento, valor) values ('mkt', '10000000-0000-0000-0000-000000000001', 'x', '2026-12-01', 10)$$,
+  'Rafa não cobra no MKT');
 
 -- ================= Logado sem cadastro (conta criada por fora do convite) =================
 set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000ff';

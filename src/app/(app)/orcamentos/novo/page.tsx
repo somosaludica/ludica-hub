@@ -63,7 +63,7 @@ export default async function NovoOrcamento({ searchParams }: { searchParams: Pr
           <fieldset className="secao">
             <legend>{t.colServicos}</legend>
             <p className="dica" style={{ margin: 0 }}>
-              {t.dicaQtd}
+              {t.dicaQtd} {t.dicaMensal}
             </p>
             <div className="tabela-caixa" style={{ padding: 0 }}>
               <table className="tabela">

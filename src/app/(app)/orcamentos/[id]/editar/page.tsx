@@ -171,7 +171,7 @@ export default async function MontarOrcamento({
             </div>
           </div>
           <p className="dica" style={{ margin: 0 }}>
-            {t.dicaItens}
+            {t.dicaItens} {t.dicaMensal}
           </p>
         </fieldset>
 

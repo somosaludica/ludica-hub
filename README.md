@@ -33,7 +33,7 @@ npm run test:banco            # migrações e permissões num Postgres 16 local
 
 1. Base: login, ambientes, perfis e permissões, Tabela de Serviços, clientes e painel de leads. **(no ar)**
 2. Comercial: pedido de orçamento e proposta **(no ar)**; PDF nos dois formatos, link para o cliente e contrato com assistente de IA (a fazer).
-3. Cobrança e financeiro: parcelas, nota de débito, régua por e-mail e WhatsApp, fechamento, resumo do ano, metas, comissões, migração do financeiro temporário.
+3. Cobrança e financeiro: parcelas da proposta aprovada, nota de débito, envio manual por WhatsApp e e-mail e baixa **(no ar)**; régua automática, comprovante, fechamento do mês, resumo do ano, sócios, metas e comissões (a fazer).
 4. Agendas e pauta: sala de reunião, estúdio, sessões, pauta de produção, agenda da casa.
 5. Integrações: nota fiscal, assinatura eletrônica, Lúdica OS.
 

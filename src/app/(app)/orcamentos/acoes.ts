@@ -200,7 +200,7 @@ export async function mudarSituacao(f: FormData) {
     const msg = error?.message ?? "";
     redirect(`/orcamentos/${id}?erro=${/Desconto acima/.test(msg) ? "desconto" : /pelo menos um servi/.test(msg) ? "itens" : "1"}`);
   }
-  redirect(para === "rascunho" ? `/orcamentos/${id}/editar` : `/orcamentos/${id}?ok=${para}`);
+  redirect(para === "rascunho" ? `/orcamentos/${id}/editar` : para === "aprovado" ? `/orcamentos/${id}/parcelas` : `/orcamentos/${id}?ok=${para}`);
 }
 
 /** Remove o orçamento. Só sócio, e nunca um aprovado (regra do banco). */

@@ -195,3 +195,9 @@ textarea.entrada { resize: vertical; min-height: 90px; line-height: 1.5; }
   .doc-topo, .doc-rodape, .doc-invest { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   @page { margin: 12mm; }
 }
+
+/* Cobranças */
+.selo.alerta { background: var(--erro-fundo); color: var(--erro-texto); }
+.doc-nota-valor { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+.doc pre { margin: 0; font: inherit; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
+.msg-caixa { background: var(--creme); border-radius: 12px; padding: 12px 14px; font-size: 13px; line-height: 1.55; white-space: pre-wrap; }

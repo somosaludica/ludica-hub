@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
-import { contexto, AMBIENTES, type AmbienteId } from "@/lib/contexto";
+import { contexto, AMBIENTES, nomeAmbiente, type AmbienteId } from "@/lib/contexto";
 import Link from "next/link";
-import { diasAteAniversario, hojeSP } from "@/lib/formatos";
+import { diasAteAniversario, hojeSP, reais } from "@/lib/formatos";
 import { textos } from "@/lib/i18n";
 import { trocarAmbiente } from "./acoes";
 
@@ -18,6 +18,20 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
   const { data: servicos } = await supabase.from("servicos").select("ambiente_id").eq("ativo", true);
   const qtd = (id: AmbienteId) => (servicos ?? []).filter((s) => s.ambiente_id === id).length;
   const meus = AMBIENTES.filter((a) => ctx.acessos[a.id]);
+
+  // Resumo financeiro do ambiente aberto (sócio e administrativo). O banco já filtra por perfil.
+  const financeiro = ctx.perfil === "socio" || ctx.perfil === "administrativo";
+  let aReceber = 0, vencido = 0, recebidoMes = 0;
+  if (financeiro) {
+    const { data: cobs } = await supabase.from("cobrancas").select("valor, vencimento, situacao, pago_em, valor_recebido").eq("ambiente_id", ctx.ambiente!);
+    const dia = hojeSP().toISOString().slice(0, 10);
+    for (const c of cobs ?? []) {
+      if (c.situacao === "aberta") {
+        aReceber += Number(c.valor);
+        if (c.vencimento < dia) vencido += Number(c.valor);
+      } else if (c.situacao === "paga" && String(c.pago_em).startsWith(dia.slice(0, 7))) recebidoMes += Number(c.valor_recebido);
+    }
+  }
 
   // Aniversários da semana: aviso para os sócios.
   let aniversarios: { id: string; nome: string; dias: number }[] = [];
@@ -60,6 +74,25 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {financeiro && (
+        <div className="kpis">
+          <Link href="/cobrancas" className="kpi" style={{ textDecoration: "none", color: "inherit" }}>
+            <span className="rotulo">
+              {t.kpiAReceber} · {nomeAmbiente(ctx.ambiente)}
+            </span>
+            <strong>{reais(aReceber)}</strong>
+          </Link>
+          <Link href="/cobrancas?s=vencida" className="kpi" style={{ textDecoration: "none", color: "inherit" }}>
+            <span className="rotulo">{t.kpiVencido}</span>
+            <strong>{reais(vencido)}</strong>
+          </Link>
+          <Link href="/cobrancas?s=paga" className="kpi" style={{ textDecoration: "none", color: "inherit" }}>
+            <span className="rotulo">{t.kpiRecebidoMes}</span>
+            <strong>{reais(recebidoMes)}</strong>
+          </Link>
         </div>
       )}
 
