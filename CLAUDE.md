@@ -20,6 +20,7 @@ Sistema de gestão da Lúdica (HUB, MUSIC, MKT). Construído e mantido pelo Bob 
 5. Um ambiente nunca fica sem sócio ativo. Ninguém desativa a própria conta.
 6. Histórico (etapas de lead, e nas próximas fases envios de cobrança e reabertura de mês) é imutável pela API.
 7. A chave secreta do Supabase nunca vai para o código do navegador nem para o repositório.
+8. **Descontos somam** sobre o valor cheio, em linhas (`orcamento_descontos`). O desconto de tipo `socio` é o sócio abrindo mão da parte dele: só o próprio sócio cria, e no fechamento ele sai SÓ da parte desse sócio (os outros recebem como se o desconto não existisse). O fechamento da fase 3 precisa respeitar isso.
 
 ## Banco
 - Migrações numeradas em `supabase/migrations/NNNN_nome.sql`; nunca editar uma que já rodou em produção, criar a próxima.

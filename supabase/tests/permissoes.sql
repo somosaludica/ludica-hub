@@ -174,7 +174,14 @@ select teste.bloqueado($$insert into orcamento_itens (orcamento_id, servico_id, 
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000003';
 select teste.igual((select count(*) from orcamentos), 1, 'Administrativo vê o pedido do comercial');
 select teste.igual((select numero from orcamentos where id = '30000000-0000-0000-0000-000000000001')::bigint, 1, 'Numeração começa em 1 no ambiente');
-update orcamentos set situacao = 'rascunho', desconto_percentual = 10 where id = '30000000-0000-0000-0000-000000000001';
+update orcamentos set situacao = 'rascunho' where id = '30000000-0000-0000-0000-000000000001';
+insert into orcamento_descontos (orcamento_id, tipo, percentual, motivo) values ('30000000-0000-0000-0000-000000000001', 'amigo', 10, 'amiga da casa');
+select teste.igual((select desconto_percentual from orcamentos where id = '30000000-0000-0000-0000-000000000001')::bigint, 10, 'O total de desconto é a soma das linhas');
+select teste.bloqueado($$insert into orcamento_descontos (orcamento_id, tipo, percentual, socio_id) values ('30000000-0000-0000-0000-000000000001', 'socio', 40, '00000000-0000-0000-0000-000000000001')$$,
+  'Administrativo não abre mão da parte de um sócio');
+select teste.bloqueado($$insert into orcamento_descontos (orcamento_id, tipo, percentual) values ('30000000-0000-0000-0000-000000000001', 'socio', 40)$$,
+  'Desconto de sócio precisa dizer qual sócio');
+select teste.bloqueado($$update orcamentos set desconto_percentual = 5 where id = '30000000-0000-0000-0000-000000000001'$$, 'O total de desconto não é digitado direto');
 update orcamento_itens set valor_unitario = 450 where orcamento_id = '30000000-0000-0000-0000-000000000001';
 select teste.igual((select count(*) from orcamento_itens where valor_unitario = 450), 1, 'Quem monta ajusta o preço no orçamento');
 select teste.bloqueado($$update orcamentos set situacao = 'enviado' where id = '30000000-0000-0000-0000-000000000001'$$,
@@ -182,6 +189,18 @@ select teste.bloqueado($$update orcamentos set situacao = 'enviado' where id = '
 select teste.bloqueado($$update orcamentos set situacao = 'aprovado' where id = '30000000-0000-0000-0000-000000000001'$$,
   'Rascunho não pula direto para aprovado');
 select teste.bloqueado($$delete from orcamento_eventos$$, 'Histórico do orçamento não é apagado');
+
+-- Descontos somam; cada sócio só abre mão da própria parte.
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000002';
+select teste.bloqueado($$insert into orcamento_descontos (orcamento_id, tipo, percentual, socio_id) values ('30000000-0000-0000-0000-000000000001', 'socio', 40, '00000000-0000-0000-0000-000000000001')$$,
+  'Rafa não abre mão da parte do Bob');
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000001';
+insert into orcamento_descontos (orcamento_id, tipo, percentual, socio_id) values ('30000000-0000-0000-0000-000000000001', 'socio', 40, '00000000-0000-0000-0000-000000000001');
+select teste.igual((select desconto_percentual from orcamentos where id = '30000000-0000-0000-0000-000000000001')::bigint, 50, 'Amigo 10% + parte do sócio 40% somam 50%');
+select teste.bloqueado($$insert into orcamento_descontos (orcamento_id, tipo, percentual) values ('30000000-0000-0000-0000-000000000001', 'parceiro', 60)$$,
+  'A soma dos descontos não passa de 100%');
+select teste.bloqueado($$insert into orcamento_descontos (orcamento_id, tipo, percentual, socio_id) values ('30000000-0000-0000-0000-000000000001', 'socio', 5, '00000000-0000-0000-0000-000000000003')$$,
+  'Quem não é sócio do ambiente não entra como sócio que abre mão');
 
 -- Sócio envia; conteúdo trava; aprovar fecha o lead.
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000001';
@@ -193,8 +212,9 @@ select teste.igual((select count(*) from orcamentos where situacao = 'enviado' a
   'Enviar grava a data e a validade');
 select teste.igual((select count(*) from leads l join orcamentos o on o.lead_id = l.id where o.id = '30000000-0000-0000-0000-000000000001' and l.etapa = 'proposta_enviada'), 1,
   'Enviar a proposta move o lead para Proposta enviada');
-select teste.bloqueado($$update orcamentos set desconto_percentual = 50 where id = '30000000-0000-0000-0000-000000000001'$$,
+select teste.bloqueado($$update orcamentos set titulo = 'outro' where id = '30000000-0000-0000-0000-000000000001'$$,
   'Proposta enviada não tem o conteúdo alterado');
+select teste.bloqueado($$delete from orcamento_descontos where orcamento_id = '30000000-0000-0000-0000-000000000001'$$, 'Descontos de proposta enviada não mudam');
 select teste.bloqueado($$update orcamento_itens set valor_unitario = 1 where orcamento_id = '30000000-0000-0000-0000-000000000001'$$,
   'Itens de proposta enviada não mudam');
 update orcamentos set situacao = 'aprovado' where id = '30000000-0000-0000-0000-000000000001';
@@ -211,6 +231,7 @@ select teste.igual((select count(*) from orcamentos), 1, 'Comercial acompanha o 
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000005';
 select teste.igual((select count(*) from orcamentos), 0, 'Pauta não vê orçamentos');
 select teste.igual((select count(*) from orcamento_itens), 0, 'Pauta não vê valores de orçamento');
+select teste.igual((select count(*) from orcamento_descontos), 0, 'Pauta não vê descontos');
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000002';
 insert into orcamentos (id, ambiente_id, cliente_id) values ('30000000-0000-0000-0000-000000000002', 'hub', '10000000-0000-0000-0000-000000000001');
 select teste.bloqueado($$insert into orcamentos (ambiente_id, cliente_id) values ('mkt', '10000000-0000-0000-0000-000000000001')$$,

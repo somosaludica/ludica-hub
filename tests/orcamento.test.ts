@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { diasDe, juntaLinhas, lerQtd, numeroOrcamento, situacaoVista, totais } from "../src/lib/orcamento.ts";
+import { diasDe, juntaLinhas, lerPercentual, lerQtd, numeroOrcamento, situacaoVista, totais, valoresDesconto } from "../src/lib/orcamento.ts";
 
 test("totais do orçamento em centavos exatos", () => {
   assert.deepEqual(totais([{ quantidade: 3, valor_unitario: 33.33 }], 0), { subtotal: 99.99, desconto: 0, total: 99.99 });
@@ -24,4 +24,18 @@ test("número, validade e leitura de campos", () => {
   assert.equal(lerQtd(""), 0);
   assert.equal(lerQtd("-1"), null);
   assert.equal(lerQtd("abc"), null);
+});
+
+test("vários descontos somam e as linhas fecham com o total", () => {
+  // Giovanna: amigo 20% + sócio abre mão de 40% num serviço de R$ 10.000 -> paga R$ 4.000
+  assert.deepEqual(valoresDesconto(10000, [20, 40]), [2000, 4000]);
+  assert.equal(totais([{ quantidade: 1, valor_unitario: 10000 }], 60).total, 4000);
+  // centavo de arredondamento fica na última linha
+  const v = valoresDesconto(99.99, [33.33, 33.33]);
+  assert.equal(Math.round((v[0] + v[1]) * 100) / 100, totais([{ quantidade: 1, valor_unitario: 99.99 }], 66.66).desconto);
+  assert.deepEqual(valoresDesconto(500, []), []);
+  assert.equal(lerPercentual("12,5"), 12.5);
+  assert.equal(lerPercentual(""), 0);
+  assert.equal(lerPercentual("101"), null);
+  assert.equal(lerPercentual("abc"), null);
 });

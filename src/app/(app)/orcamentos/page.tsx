@@ -112,8 +112,9 @@ export default async function Orcamentos({ searchParams }: { searchParams: Promi
                   <td data-label={t.colServicos}>{o.servicos || "—"}</td>
                   <td data-label={t.colPedidoPor}>{pessoas[o.pedido_por] ?? "—"}</td>
                   <td data-label={t.desconto}>
-                    {t.descontos[o.desconto_categoria]}
-                    {Number(o.desconto_percentual) > 0 ? ` · ${Number(o.desconto_percentual).toLocaleString("pt-BR")}%` : ""}
+                    {Number(o.desconto_percentual) > 0
+                      ? `${Number(o.desconto_percentual).toLocaleString("pt-BR")}%`
+                      : o.desconto_categoria !== "nenhum" ? t.pedidoDesconto(t.descontos[o.desconto_categoria]) : "—"}
                   </td>
                   <td data-label={t.total} className="num">
                     {reais(o.total)}

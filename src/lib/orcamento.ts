@@ -20,6 +20,30 @@ export function totais(itens: Item[], descontoPercentual: number) {
   return { subtotal: sub / 100, desconto: desc / 100, total: (sub - desc) / 100 };
 }
 
+/**
+ * Valor de cada linha de desconto. Os percentuais somam sobre o subtotal; o total é arredondado uma vez
+ * e a última linha absorve o centavo de diferença, para as linhas sempre fecharem com o total.
+ */
+export function valoresDesconto(subtotal: number, percentuais: number[]): number[] {
+  const sub = centavos(subtotal);
+  const total = Math.round((sub * percentuais.reduce((s, p) => s + Number(p), 0)) / 100);
+  let usado = 0;
+  return percentuais.map((p, i) => {
+    const v = i === percentuais.length - 1 ? total - usado : Math.round((sub * Number(p)) / 100);
+    usado += v;
+    return v / 100;
+  });
+}
+
+/** Percentual digitado ("20", "12,5") -> número com até 2 casas entre 0 e 100, ou null. Vazio = 0. */
+export function lerPercentual(texto: string): number | null {
+  const t = texto.trim().replace("%", "").replace(",", ".");
+  if (!t) return 0;
+  if (!/^\d{1,3}(\.\d{1,2})?$/.test(t)) return null;
+  const n = Number(t);
+  return n <= 100 ? n : null;
+}
+
 /** Proposta enviada que passou da validade conta como expirada (calculado, sem rotina noturna). */
 export function situacaoVista(situacao: Situacao, validadeAte: string | null, hoje: Date): SituacaoVista {
   if (situacao === "enviado" && validadeAte && validadeAte < hoje.toISOString().slice(0, 10)) return "expirado";

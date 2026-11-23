@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { contexto, exigePerfil, nomeAmbiente } from "@/lib/contexto";
 import { reais, reaisCampo, type Unidade } from "@/lib/formatos";
 import { textos } from "@/lib/i18n";
-import { diasDe, juntaLinhas, numeroOrcamento, totais } from "@/lib/orcamento";
+import { Fragment } from "react";
+import { diasDe, juntaLinhas, numeroOrcamento, totais, valoresDesconto } from "@/lib/orcamento";
 import FormAcao, { BotaoEnviar } from "@/componentes/form-acao";
 import { salvarOrcamento } from "../../acoes";
 
@@ -34,6 +35,12 @@ export default async function MontarOrcamento({
   if (!o) notFound();
   if (o.situacao !== "pedido" && o.situacao !== "rascunho") redirect(`/orcamentos/${id}`);
 
+  const { data: descs } = await supabase.from("orcamento_descontos").select("id, tipo, percentual, motivo, socio_id, ordem, criado_em").eq("orcamento_id", id).order("ordem");
+  const descontos = ([...(descs ?? [])] as { id: string; tipo: "amigo" | "cliente" | "parceiro" | "socio"; percentual: number; motivo: string | null; socio_id: string | null; ordem: number; criado_em: string }[])
+    .sort((a, b) => a.ordem - b.ordem || String(a.criado_em).localeCompare(String(b.criado_em)));
+  const idsSocios = [...new Set(descontos.map((d) => d.socio_id).filter(Boolean))] as string[];
+  const { data: nomesSocios } = idsSocios.length ? await supabase.from("perfis").select("id, nome").in("id", idsSocios) : { data: [] };
+  const socios: Record<string, string> = Object.fromEntries((nomesSocios ?? []).map((p) => [p.id, p.nome]));
   const [{ data: its }, { data: servs }, { data: cliente }, { data: autor }] = await Promise.all([
     supabase.from("orcamento_itens").select("id, servico_id, descricao, unidade, quantidade, valor_unitario, ordem").eq("orcamento_id", id).order("ordem"),
     supabase.from("servicos").select("id, categoria, nome, ativo, proposta_titulo, proposta_descricao, proposta_incluso, proposta_nao_incluso, proposta_opcionais, proposta_workflow, proposta_prazo, proposta_pagamento, proposta_validade").eq("ambiente_id", ctx.ambiente!).order("categoria").order("nome"),
@@ -58,6 +65,7 @@ export default async function MontarOrcamento({
     validade: o.situacao === "pedido" ? diasDe(primeiro("proposta_validade"), o.validade_dias) : o.validade_dias,
   };
   const { subtotal, desconto, total } = totais(itens, Number(o.desconto_percentual));
+  const valores = valoresDesconto(subtotal, descontos.map((d) => Number(d.percentual)));
   const area = (rotulo: string, nome: string, valor: string, linhasCampo = 4, dica?: string) => (
     <div>
       <label className="campo" htmlFor={nome}>
@@ -168,38 +176,80 @@ export default async function MontarOrcamento({
         </fieldset>
 
         <fieldset className="secao">
-          <legend>{t.desconto}</legend>
+          <legend>{t.descontosTitulo}</legend>
+          {descontos.map((d) => {
+            const rotulo = t.tiposDesconto[d.tipo];
+            return (
+              <div key={d.id} className="linha-3">
+                <div>
+                  <div className="campo">{rotulo}</div>
+                  <div className="dica" style={{ marginTop: 0 }}>
+                    {d.tipo === "socio" ? t.parteDe(socios[d.socio_id ?? ""] ?? "—") : "\u00a0"}
+                  </div>
+                </div>
+                <div>
+                  <label className="campo" htmlFor={`desc_pct_${d.id}`}>
+                    {t.percentual}
+                  </label>
+                  <input id={`desc_pct_${d.id}`} name={`desc_pct_${d.id}`} className="entrada" inputMode="decimal" aria-label={t.percentualDe(rotulo)} defaultValue={Number(d.percentual).toLocaleString("pt-BR")} />
+                </div>
+                <div>
+                  <label className="campo" htmlFor={`desc_motivo_${d.id}`}>
+                    {t.motivoDesconto}
+                  </label>
+                  <input id={`desc_motivo_${d.id}`} name={`desc_motivo_${d.id}`} className="entrada" aria-label={t.motivoDe(rotulo)} defaultValue={d.motivo ?? ""} />
+                </div>
+              </div>
+            );
+          })}
           <div className="linha-3">
             <div>
-              <label className="campo" htmlFor="desconto_categoria">
-                {t.descontoCategoria}
+              <label className="campo" htmlFor="novo_desc_tipo">
+                {t.adicionarDesconto}
               </label>
-              <select id="desconto_categoria" name="desconto_categoria" className="entrada" defaultValue={o.desconto_categoria}>
-                {(["nenhum", "amigo", "cliente", "parceiro"] as const).map((c) => (
+              <select id="novo_desc_tipo" name="novo_desc_tipo" className="entrada" defaultValue="">
+                <option value="">—</option>
+                {(["amigo", "cliente", "parceiro"] as const).map((c) => (
                   <option key={c} value={c}>
-                    {t.descontos[c]}
+                    {t.tiposDesconto[c]}
                   </option>
                 ))}
+                {ctx.perfil === "socio" && <option value="socio">{t.tiposDesconto.socio}</option>}
               </select>
             </div>
             <div>
-              <label className="campo" htmlFor="desconto_percentual">
+              <label className="campo" htmlFor="novo_desc_pct">
                 {t.percentual}
               </label>
-              <input id="desconto_percentual" name="desconto_percentual" className="entrada" inputMode="decimal" defaultValue={Number(o.desconto_percentual) ? Number(o.desconto_percentual).toLocaleString("pt-BR") : ""} placeholder="0" />
+              <input id="novo_desc_pct" name="novo_desc_pct" className="entrada" inputMode="decimal" placeholder="0" />
             </div>
             <div>
-              <label className="campo" htmlFor="desconto_motivo">
+              <label className="campo" htmlFor="novo_desc_motivo">
                 {t.motivoDesconto}
               </label>
-              <input id="desconto_motivo" name="desconto_motivo" className="entrada" defaultValue={o.desconto_motivo ?? ""} />
+              <input id="novo_desc_motivo" name="novo_desc_motivo" className="entrada" />
             </div>
           </div>
+          <p className="dica" style={{ margin: 0 }}>
+            {t.dicaDescontos}
+          </p>
           <dl className="resumo-total">
             <dt>{t.subtotal}</dt>
             <dd>{reais(subtotal)}</dd>
-            <dt>{t.desconto}</dt>
-            <dd>− {reais(desconto)}</dd>
+            {descontos.map((d, n) => (
+              <Fragment key={d.id}>
+                <dt>
+                  {t.tiposDesconto[d.tipo]} ({Number(d.percentual).toLocaleString("pt-BR")}%)
+                </dt>
+                <dd>− {reais(valores[n])}</dd>
+              </Fragment>
+            ))}
+            {descontos.length !== 1 && (
+              <>
+                <dt>{t.desconto}</dt>
+                <dd>− {reais(desconto)}</dd>
+              </>
+            )}
             <dt className="forte">{t.total}</dt>
             <dd className="forte">{reais(total)}</dd>
           </dl>

@@ -7,11 +7,12 @@ import { contexto } from "@/lib/contexto";
 import { lerReais } from "@/lib/formatos";
 import { campo, falha, opcional } from "@/lib/form";
 import { textos } from "@/lib/i18n";
-import { lerQtd } from "@/lib/orcamento";
+import { lerPercentual, lerQtd } from "@/lib/orcamento";
 import type { Estado } from "@/componentes/form-acao";
 
 const CATEGORIAS = ["nenhum", "amigo", "cliente", "parceiro"];
 const FORMATOS = ["one_page", "completa", "ambos"];
+const TIPOS_DESCONTO = ["amigo", "cliente", "parceiro", "socio"];
 type Servico = { id: string; nome: string; unidade: string; valor: number };
 
 /**
@@ -47,8 +48,6 @@ export async function criarOrcamento(_: Estado, f: FormData): Promise<Estado> {
       lead_id: opcional(f, "lead_id"),
       situacao: comercial ? "pedido" : "rascunho",
       pedido_por: ctx.usuarioId,
-      desconto_categoria: categoria,
-      desconto_motivo: categoria === "nenhum" ? null : opcional(f, "desconto_motivo"),
       obs_negociacao: opcional(f, "obs_negociacao"),
     })
     .select("id");
@@ -100,11 +99,22 @@ export async function salvarOrcamento(_: Estado, f: FormData): Promise<Estado> {
   const novoQtd = novoServico ? lerQtd(campo(f, "novo_qtd") || "1") : 0;
   if (novoQtd == null) return falha(f, t.erroQtd);
 
-  const categoria = CATEGORIAS.includes(campo(f, "desconto_categoria")) ? campo(f, "desconto_categoria") : "nenhum";
-  const pctTxt = campo(f, "desconto_percentual").replace(",", ".");
-  const pct = pctTxt === "" ? 0 : Number(pctTxt);
-  if (!Number.isFinite(pct) || pct < 0 || pct > 100) return falha(f, t.erroPercentual);
-  if (pct > 0 && categoria === "nenhum") return falha(f, t.erroDescontoCategoria);
+  // Descontos: linhas que somam. Percentual 0 remove a linha.
+  const { data: descontos } = await supabase.from("orcamento_descontos").select("id, tipo, percentual").eq("orcamento_id", id);
+  const mudaDesc: { id: string; pct: number; delta: number; motivo: string | null }[] = [];
+  let soma = 0;
+  for (const d of descontos ?? []) {
+    const pct = lerPercentual(campo(f, `desc_pct_${d.id}`));
+    if (pct == null) return falha(f, t.erroPercentual);
+    mudaDesc.push({ id: d.id as string, pct, delta: pct - Number(d.percentual), motivo: opcional(f, `desc_motivo_${d.id}`) });
+    soma += pct;
+  }
+  const novoTipo = campo(f, "novo_desc_tipo");
+  const novoPct = TIPOS_DESCONTO.includes(novoTipo) ? lerPercentual(campo(f, "novo_desc_pct")) : 0;
+  if (novoPct == null) return falha(f, t.erroPercentual);
+  if (novoTipo === "socio" && novoPct > 0 && ctx.perfil !== "socio") return falha(f, t.erroSoProprioSocio);
+  soma += novoPct;
+  if (soma > 100) return falha(f, t.erroDescontoTotal);
   const validade = Number(campo(f, "validade_dias"));
   if (!Number.isInteger(validade) || validade < 1 || validade > 365) return falha(f, t.erroValidade);
   const formato = FORMATOS.includes(campo(f, "formato")) ? campo(f, "formato") : "one_page";
@@ -127,14 +137,26 @@ export async function salvarOrcamento(_: Estado, f: FormData): Promise<Estado> {
     if (error) return falha(f, t.erroSalvar);
   }
 
-  // 3. Cabeçalho, texto e condições.
+  // 3. Descontos (primeiro as reduções, para a soma nunca passar de 100% no meio do caminho).
+  for (const d of [...mudaDesc].sort((x, y) => x.delta - y.delta)) {
+    const r = d.pct === 0
+      ? await supabase.from("orcamento_descontos").delete().eq("id", d.id)
+      : await supabase.from("orcamento_descontos").update({ percentual: d.pct, motivo: d.motivo }).eq("id", d.id);
+    if (r.error) return falha(f, t.erroSalvar);
+  }
+  if (novoPct > 0) {
+    const { error } = await supabase.from("orcamento_descontos").insert({
+      orcamento_id: id, tipo: novoTipo, percentual: novoPct, motivo: opcional(f, "novo_desc_motivo"),
+      socio_id: novoTipo === "socio" ? ctx.usuarioId : null, ordem: (descontos ?? []).length,
+    });
+    if (error) return falha(f, novoTipo === "socio" ? t.erroSoProprioSocio : t.erroSalvar);
+  }
+
+  // 4. Cabeçalho, texto e condições.
   const { data, error } = await supabase
     .from("orcamentos")
     .update({
       situacao: "rascunho",
-      desconto_categoria: categoria,
-      desconto_percentual: categoria === "nenhum" ? 0 : pct,
-      desconto_motivo: categoria === "nenhum" ? null : opcional(f, "desconto_motivo"),
       assinatura: campo(f, "assinatura") === "hub" ? "hub" : "ambiente",
       formato,
       titulo: opcional(f, "titulo"),

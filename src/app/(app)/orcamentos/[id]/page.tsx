@@ -26,7 +26,8 @@ export default async function Proposta({
   const supabase = await createClient();
   const { data: o } = await supabase.from("orcamentos").select("*").eq("id", id).eq("ambiente_id", ctx.ambiente!).maybeSingle();
   if (!o) notFound();
-  const [{ data: itens }, { data: cliente }, { data: eventos }] = await Promise.all([
+  const [{ data: descs }, { data: itens }, { data: cliente }, { data: eventos }] = await Promise.all([
+    supabase.from("orcamento_descontos").select("tipo, percentual, ordem, criado_em").eq("orcamento_id", id).order("ordem"),
     supabase.from("orcamento_itens").select("descricao, unidade, quantidade, valor_unitario, ordem").eq("orcamento_id", id).order("ordem"),
     supabase.from("clientes").select("nome, idioma_documentos").eq("id", o.cliente_id).maybeSingle(),
     supabase.from("orcamento_eventos").select("id, de, para, em").eq("orcamento_id", id).order("em"),
@@ -100,6 +101,7 @@ export default async function Proposta({
           titulo: o.titulo, descricao: o.descricao, incluso: o.incluso, nao_incluso: o.nao_incluso, opcionais: o.opcionais,
           workflow: o.workflow, entrega: o.entrega, prazo: o.prazo, pagamento: o.pagamento,
           validade_dias: o.validade_dias, validade_ate: o.validade_ate, desconto_percentual: Number(o.desconto_percentual),
+          descontos: [...(descs ?? [])].sort((a, b) => a.ordem - b.ordem || String(a.criado_em).localeCompare(String(b.criado_em))).map((x) => ({ tipo: x.tipo as "amigo", percentual: Number(x.percentual) })),
           itens: ordenados.map((i) => ({ descricao: i.descricao, unidade: i.unidade as Unidade, quantidade: Number(i.quantidade), valor_unitario: Number(i.valor_unitario) })),
         }}
       />

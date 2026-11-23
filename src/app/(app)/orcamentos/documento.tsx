@@ -1,6 +1,6 @@
 import { dataCurta, reais, type Unidade } from "@/lib/formatos";
 import { textos, type Idioma } from "@/lib/i18n";
-import { linhas, totais } from "@/lib/orcamento";
+import { linhas, totais, valoresDesconto } from "@/lib/orcamento";
 
 export type DadosProposta = {
   numero: string;
@@ -19,6 +19,7 @@ export type DadosProposta = {
   validade_dias: number;
   validade_ate: string | null;
   desconto_percentual: number;
+  descontos: { tipo: "amigo" | "cliente" | "parceiro" | "socio"; percentual: number }[];
   itens: { descricao: string; unidade: Unidade; quantidade: number; valor_unitario: number }[];
 };
 
@@ -39,6 +40,7 @@ export default function DocumentoProposta({ d }: { d: DadosProposta }) {
   const t = textos(d.idioma);
   const { subtotal, desconto, total } = totais(d.itens, d.desconto_percentual);
   const qtd = (n: number) => Number(n).toLocaleString("pt-BR");
+  const valores = valoresDesconto(subtotal, d.descontos.map((x) => x.percentual));
   const cond: [string, string | null][] = [
     [t.docEntrega, d.entrega],
     [t.docPrazo, d.prazo],
@@ -107,10 +109,14 @@ export default function DocumentoProposta({ d }: { d: DadosProposta }) {
                         <td colSpan={2}>{t.subtotal}</td>
                         <td className="num">{reais(subtotal)}</td>
                       </tr>
-                      <tr>
-                        <td colSpan={2}>{t.docDesconto(Number(d.desconto_percentual).toLocaleString("pt-BR"))}</td>
-                        <td className="num">− {reais(desconto)}</td>
-                      </tr>
+                      {d.descontos.map((x, n) => (
+                        <tr key={n}>
+                          <td colSpan={2}>
+                            {t.docDescontos[x.tipo]} ({qtd(x.percentual)}%)
+                          </td>
+                          <td className="num">− {reais(valores[n])}</td>
+                        </tr>
+                      ))}
                     </>
                   )}
                 </tbody>
