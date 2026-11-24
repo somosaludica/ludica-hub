@@ -284,6 +284,53 @@ select teste.igual((select count(*) from cobrancas), 1, 'Rafa vê as cobranças 
 select teste.bloqueado($$insert into cobrancas (ambiente_id, cliente_id, descricao, vencimento, valor) values ('mkt', '10000000-0000-0000-0000-000000000001', 'x', '2026-12-01', 10)$$,
   'Rafa não cobra no MKT');
 
+-- ================= Financeiro (fase 3, parte 2) =================
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000002';
+insert into participacoes (ambiente_id, socio_id, percentual) values ('music', '00000000-0000-0000-0000-000000000002', 60), ('music', '00000000-0000-0000-0000-000000000001', 40);
+select teste.bloqueado($$insert into participacoes (ambiente_id, socio_id, percentual) values ('music', '00000000-0000-0000-0000-000000000003', 10)$$, 'Quem não é sócio não tem participação');
+select teste.bloqueado($$update participacoes set percentual = 70 where ambiente_id = 'music' and socio_id = '00000000-0000-0000-0000-000000000002'$$, 'Participações não passam de 100%');
+select teste.bloqueado($$insert into participacoes (ambiente_id, socio_id, percentual) values ('mkt', '00000000-0000-0000-0000-000000000001', 100)$$, 'Rafa não mexe na participação do MKT');
+
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000003';
+with u as (update participacoes set percentual = 50 where ambiente_id = 'music' and socio_id = '00000000-0000-0000-0000-000000000002' returning 1)
+  select teste.igual((select count(*) from u), 0, 'Administrativo não altera participação');
+insert into lancamentos (id, ambiente_id, tipo, categoria, descricao, vencimento, valor) values
+  ('50000000-0000-0000-0000-000000000001', 'music', 'saida', 'conta_fixa', 'Aluguel', '2026-10-05', 3000);
+update lancamentos set situacao = 'paga', pago_em = '2026-10-05' where id = '50000000-0000-0000-0000-000000000001';
+select teste.bloqueado($$insert into lancamentos (ambiente_id, tipo, categoria, descricao, vencimento, valor, socio_id) values ('music', 'saida', 'distribuicao', 'Retirada', '2026-10-10', 100, '00000000-0000-0000-0000-000000000002')$$,
+  'Administrativo não lança distribuição de lucros');
+select teste.bloqueado($$insert into lancamentos (ambiente_id, tipo, categoria, descricao, vencimento, valor) values ('music', 'entrada', 'conta_fixa', 'x', '2026-10-10', 100)$$,
+  'Categoria precisa combinar com entrada ou saída');
+select teste.bloqueado($$update ambiente_dados set imposto_pct = 0 where ambiente_id = 'music'$$, 'Administrativo não muda o imposto');
+insert into meses_fechados (ambiente_id, mes, resultado) values ('music', '2026-10-01', '{"ok": true}');
+select teste.bloqueado($$update lancamentos set valor = 1 where id = '50000000-0000-0000-0000-000000000001'$$, 'Lançamento de mês fechado não muda');
+select teste.bloqueado($$insert into lancamentos (ambiente_id, tipo, categoria, descricao, vencimento, valor) values ('music', 'saida', 'outras_saidas', 'x', '2026-10-20', 10)$$,
+  'Não entra lançamento novo em mês fechado');
+select teste.bloqueado($$delete from lancamentos where id = '50000000-0000-0000-0000-000000000001'$$, 'Lançamento de mês fechado não é apagado');
+select teste.bloqueado($$update cobrancas set situacao = 'paga', pago_em = '2026-10-15', valor_recebido = 250 where id = '40000000-0000-0000-0000-000000000001'$$,
+  'Baixa não cai em mês fechado');
+select teste.bloqueado($$update meses_fechados set resultado = '{}' where ambiente_id = 'music'$$, 'Fotografia do mês fechado não é editada');
+select teste.bloqueado($$insert into meses_fechados (ambiente_id, mes, resultado) values ('music', '2099-01-01', '{}')$$, 'Mês futuro não fecha');
+with d as (delete from meses_fechados where ambiente_id = 'music' returning 1)
+  select teste.igual((select count(*) from d), 0, 'Administrativo não reabre mês');
+
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000004';
+select teste.igual((select count(*) from lancamentos) + (select count(*) from meses_fechados) + (select count(*) from participacoes), 0, 'Comercial não vê nada do financeiro');
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000005';
+select teste.igual((select count(*) from lancamentos) + (select count(*) from meses_fechados) + (select count(*) from participacoes), 0, 'Pauta não vê nada do financeiro');
+
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000001';
+insert into lancamentos (ambiente_id, tipo, categoria, descricao, vencimento, valor) values ('mkt', 'saida', 'outras_saidas', 'Ferramenta MKT', '2026-11-10', 99);
+insert into lancamentos (ambiente_id, tipo, categoria, descricao, vencimento, valor, socio_id) values ('music', 'saida', 'distribuicao', 'Retirada Rafa', '2026-11-10', 100, '00000000-0000-0000-0000-000000000002');
+select teste.bloqueado($$insert into lancamentos (ambiente_id, tipo, categoria, descricao, vencimento, valor, socio_id) values ('mkt', 'saida', 'distribuicao', 'x', '2026-11-10', 100, '00000000-0000-0000-0000-000000000002')$$,
+  'Distribuição só para sócio do próprio ambiente');
+delete from meses_fechados where ambiente_id = 'music' and mes = '2026-10-01';
+select teste.igual((select count(distinct tipo) from fechamento_eventos), 2, 'Fechar e reabrir ficam registrados');
+update lancamentos set valor = 3100 where id = '50000000-0000-0000-0000-000000000001';
+select teste.igual((select valor from lancamentos where id = '50000000-0000-0000-0000-000000000001')::bigint, 3100, 'Depois de reabrir, o lançamento volta a ser editável');
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000002';
+select teste.igual((select count(*) from lancamentos), 2, 'Rafa vê os lançamentos do MUSIC, não os do MKT');
+
 -- ================= Logado sem cadastro (conta criada por fora do convite) =================
 set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000ff';
 select teste.igual((select count(*) from servicos), 0, 'Conta sem cadastro não vê serviços');

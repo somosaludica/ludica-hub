@@ -201,3 +201,11 @@ textarea.entrada { resize: vertical; min-height: 90px; line-height: 1.5; }
 .doc-nota-valor { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
 .doc pre { margin: 0; font: inherit; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
 .msg-caixa { background: var(--creme); border-radius: 12px; padding: 12px 14px; font-size: 13px; line-height: 1.55; white-space: pre-wrap; }
+
+/* Financeiro */
+.troca-mes { display: flex; align-items: center; gap: 12px; }
+.troca-mes strong { min-width: 170px; text-align: center; font-size: 15px; }
+.troca-mes .btn { min-width: 44px; padding: 0; font-size: 18px; }
+.grade-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start; }
+.resumo-total.largo { max-width: none; margin-left: 0; }
+.grade-2 > * { min-width: 0; overflow-x: auto; }
