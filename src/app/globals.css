@@ -209,3 +209,24 @@ textarea.entrada { resize: vertical; min-height: 90px; line-height: 1.5; }
 .grade-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start; }
 .resumo-total.largo { max-width: none; margin-left: 0; }
 .grade-2 > * { min-width: 0; overflow-x: auto; }
+
+/* Financeiro no formato do fluxo: quadros de número, faixa de mês e linha de conta */
+.quadros { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.quadro { display: flex; flex-direction: column; gap: 2px; background: var(--cartao); border-radius: var(--raio); padding: 14px 16px; border-left: 4px solid var(--linha); color: var(--texto); text-decoration: none; min-height: 44px; }
+.quadro strong { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.quadro .dica { margin-top: 2px; }
+.quadro.ok { border-left-color: var(--ok-texto); }
+.quadro.alerta { border-left-color: var(--erro-texto); }
+.quadro.atencao { border-left-color: var(--vinho); }
+a.quadro:hover, a.quadro[aria-current] { outline: 2px solid var(--texto); outline-offset: -2px; }
+.neg { color: var(--erro-texto); }
+.faixa-mes { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; margin-top: 8px; border-radius: 10px; background: var(--creme); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.contas { list-style: none; margin: 0; padding: 0; }
+.conta { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--linha); font-size: 13px; }
+.conta:last-child { border-bottom: 0; }
+.conta .valor { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.conta .valor .dica, .conta .dica { margin-top: 2px; font-weight: 400; }
+.conta .marcas { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.conta .marcas form { margin-left: auto; }
+.conta .marcas .btn { min-height: 44px; }
+a.selo { text-decoration: underline; }

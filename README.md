@@ -11,7 +11,7 @@ Mesma base técnica do Lúdica OS (Next.js, Supabase, Vercel), em repositório e
 ## Configuração (uma vez)
 
 1. **Supabase → New project.** Região South America (São Paulo). Guarde a senha do banco num lugar seguro.
-2. **SQL Editor:** rode os arquivos de `supabase/migrations/` em ordem numérica (cada um uma única vez) e, depois da 0001, `supabase/seed/servicos.sql`.
+2. **SQL Editor:** rode os arquivos de `supabase/migrations/` em ordem numérica (cada um uma única vez) e, depois da 0001, `supabase/seed/servicos.sql`. Depois da 0008 e com o Rafa cadastrado como sócio do MUSIC, `supabase/seed/music_financeiro_antigo.sql` traz os dados do controle financeiro antigo da Music (pode rodar de novo sem duplicar).
 3. **Authentication → Users → Add user:** crie o usuário do Bob com "Auto Confirm User" marcado. Troque o e-mail em `supabase/primeiro_socio.sql` e rode no SQL Editor.
 4. **Authentication → Sign In / Providers:** desligue "Allow new users to sign up". Só entra quem um sócio convidar.
 5. **Vercel → Add New Project:** importe este repositório e configure as variáveis de `.env.example`. A `SUPABASE_SECRET_KEY` vai só na Vercel.
@@ -33,7 +33,7 @@ npm run test:banco            # migrações e permissões num Postgres 16 local
 
 1. Base: login, ambientes, perfis e permissões, Tabela de Serviços, clientes e painel de leads. **(no ar)**
 2. Comercial: pedido de orçamento e proposta **(no ar)**; PDF nos dois formatos, link para o cliente e contrato com assistente de IA (a fazer).
-3. Cobrança e financeiro: cobranças, nota de débito, envio manual, baixa, lançamentos, fechamento do mês com divisão entre sócios e participações **(no ar)**; régua automática, comprovante, contas fixas com rateio, comissões, resumo do ano, previsão e metas (a fazer).
+3. Cobrança e financeiro: cobranças, nota de débito, envio manual e baixa **(no ar)**; financeiro no formato do controle antigo da Music (Resumo, Fluxo mensal, Fechamento do mês, Sócios e lucros), com mês de referência, rateio, comprovante, apuração por recebimento, fundo de reserva e posição dos sócios **(no ar)**; régua automática, comissões, resumo do ano e metas (a fazer). Os arquivos dos comprovantes antigos da Music ficaram no sistema antigo: cada lançamento guarda o nome do arquivo para anexar de novo.
 4. Agendas e pauta: sala de reunião, estúdio, sessões, pauta de produção, agenda da casa.
 5. Integrações: nota fiscal, assinatura eletrônica, Lúdica OS.
 

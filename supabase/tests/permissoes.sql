@@ -331,6 +331,61 @@ select teste.igual((select valor from lancamentos where id = '50000000-0000-0000
 set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000002';
 select teste.igual((select count(*) from lancamentos), 2, 'Rafa vê os lançamentos do MUSIC, não os do MKT');
 
+-- ================= Financeiro no formato do fluxo (fase 3, parte 3) =================
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000003';
+insert into lancamentos (id, ambiente_id, tipo, categoria, rubrica, descricao, mes_ref, valor_total, parte_pct, valor, aviso) values
+  ('50000000-0000-0000-0000-000000000002', 'music', 'saida', 'conta_fixa', 'Alarme', 'Verisure', '2026-09-01', 228.56, 50, 114.28, 'em_atraso');
+select teste.igual((select count(*) from lancamentos where id = '50000000-0000-0000-0000-000000000002' and vencimento is null and mes_ref = '2026-09-01')::bigint, 1,
+  'Conta entra pelo mês de referência, mesmo sem dia de vencimento');
+update lancamentos set situacao = 'paga' where id = '50000000-0000-0000-0000-000000000002';
+select teste.igual((select count(*) from lancamentos where id = '50000000-0000-0000-0000-000000000002' and pago_em is null and aviso is null)::bigint, 1,
+  'Conta paga pode ficar sem data de pagamento e perde o aviso de atraso');
+insert into lancamentos (id, ambiente_id, tipo, categoria, descricao, vencimento, valor) values
+  ('50000000-0000-0000-0000-000000000003', 'music', 'saida', 'conta_fixa', 'Luz', '2026-11-04', 80);
+select teste.igual((select count(*) from lancamentos where id = '50000000-0000-0000-0000-000000000003' and mes_ref = '2026-11-01' and valor_total = 80)::bigint, 1,
+  'Sem mês de referência, vale o mês do vencimento; sem valor total, vale a parte do ambiente');
+select teste.bloqueado($$update lancamentos set situacao = 'provisionada', pago_em = '2026-11-01', aviso = 'x' where id = '50000000-0000-0000-0000-000000000003'$$, 'Aviso só aceita em atraso ou a confirmar');
+insert into lancamentos (id, ambiente_id, tipo, categoria, descricao, mes_ref, valor, situacao, pago_em) values
+  ('50000000-0000-0000-0000-000000000004', 'music', 'entrada', 'outras_entradas', 'LUKA (1/2)', '2026-08-01', 8400, 'paga', '2026-08-17');
+select teste.igual((select count(*) from lancamentos where id = '50000000-0000-0000-0000-000000000004' and apur_imposto_pct = 6 and apur_reserva_pct = 20
+  and (apur_partes ->> '00000000-0000-0000-0000-000000000002')::numeric = 60)::bigint, 1, 'Recebimento congela imposto, reserva e participação do dia');
+select teste.bloqueado($$update ambiente_dados set cobertura_socio_id = '00000000-0000-0000-0000-000000000001' where ambiente_id = 'music'$$, 'Administrativo não escolhe quem cobre o caixa');
+update ambiente_dados set rateios = '[{"nome": "Contas do escritório", "pct": 50}]' where ambiente_id = 'music';
+select teste.igual((select jsonb_array_length(rateios) from ambiente_dados where ambiente_id = 'music')::bigint, 1, 'Administrativo ajusta os atalhos de rateio');
+insert into storage.objects (bucket_id, name) values ('comprovantes', 'music/50000000-0000-0000-0000-000000000003/luz.jpg');
+select teste.igual((select count(*) from storage.objects)::bigint, 1, 'Administrativo guarda e vê comprovante do MUSIC');
+
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000001';
+update ambiente_dados set imposto_pct = 10 where ambiente_id = 'music';
+select teste.igual((select apur_imposto_pct from lancamentos where id = '50000000-0000-0000-0000-000000000004')::bigint, 6, 'Mudar o imposto não mexe no que já foi recebido');
+update ambiente_dados set imposto_pct = 6, cobertura_socio_id = '00000000-0000-0000-0000-000000000001', cobertura_nome = 'Lúdica Marketing' where ambiente_id = 'music';
+select teste.bloqueado($$update ambiente_dados set cobertura_socio_id = '00000000-0000-0000-0000-000000000002' where ambiente_id = 'mkt'$$, 'Quem cobre o caixa precisa ser sócio do ambiente');
+update cobrancas set situacao = 'paga', pago_em = '2026-11-12', valor_recebido = 250 where id = '40000000-0000-0000-0000-000000000001';
+select teste.igual((select count(*) from cobrancas where id = '40000000-0000-0000-0000-000000000001' and apur_imposto_pct = 6 and apur_reserva_pct = 20 and apur_partes is not null)::bigint, 1,
+  'Baixa da cobrança congela a apuração');
+update cobrancas set apur_custos = 40, apur_obs = 'Bateria' where id = '40000000-0000-0000-0000-000000000001';
+select teste.igual((select apur_custos from cobrancas where id = '40000000-0000-0000-0000-000000000001')::bigint, 40, 'Cobrança paga aceita ajuste da apuração');
+select teste.bloqueado($$update cobrancas set valor = 1 where id = '40000000-0000-0000-0000-000000000001'$$, 'Cobrança paga continua sem aceitar outra mudança');
+insert into meses_fechados (ambiente_id, mes, resultado) values ('music', '2026-11-01', '{}'), ('music', '2026-09-01', '{}');
+select teste.bloqueado($$update cobrancas set apur_custos = 0 where id = '40000000-0000-0000-0000-000000000001'$$, 'Apuração de mês fechado não muda');
+select teste.bloqueado($$update lancamentos set pago_em = '2026-12-02' where id = '50000000-0000-0000-0000-000000000002'$$, 'O mês de referência é o que trava: conta de setembro fechado não muda');
+select teste.bloqueado($$update lancamentos set mes_ref = '2026-09-01' where id = '50000000-0000-0000-0000-000000000003'$$, 'Não dá para mover uma conta para um mês fechado');
+delete from meses_fechados where ambiente_id = 'music';
+update cobrancas set situacao = 'aberta' where id = '40000000-0000-0000-0000-000000000001';
+select teste.igual((select count(*) from cobrancas where id = '40000000-0000-0000-0000-000000000001' and apur_imposto_pct is null)::bigint, 1, 'Estorno limpa a apuração congelada');
+insert into storage.objects (bucket_id, name) values ('comprovantes', 'mkt/x/nota.pdf');
+
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000002';
+select teste.igual((select count(*) from storage.objects)::bigint, 1, 'Rafa vê os comprovantes do MUSIC, não os do MKT');
+select teste.bloqueado($$insert into storage.objects (bucket_id, name) values ('comprovantes', 'mkt/x/outro.pdf')$$, 'Rafa não guarda comprovante no MKT');
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000004';
+select teste.igual((select count(*) from storage.objects)::bigint, 0, 'Comercial não vê comprovantes');
+select teste.bloqueado($$insert into storage.objects (bucket_id, name) values ('comprovantes', 'music/x/y.pdf')$$, 'Comercial não guarda comprovante');
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000005';
+select teste.igual((select count(*) from storage.objects)::bigint, 0, 'Pauta não vê comprovantes');
+set request.jwt.claim.sub = '00000000-0000-0000-0000-000000000002';
+select teste.igual((select count(*) from lancamentos), 5, 'Rafa vê os lançamentos do MUSIC, não os do MKT (com os novos)');
+
 -- ================= Logado sem cadastro (conta criada por fora do convite) =================
 set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000ff';
 select teste.igual((select count(*) from servicos), 0, 'Conta sem cadastro não vê serviços');

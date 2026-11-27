@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Comprovante de pagamento vai junto no formulário (até 4 MB; a Vercel aceita 4,5 MB por envio).
+  experimental: { serverActions: { bodySizeLimit: "5mb" } },
   // Sistema interno com dados financeiros: não abre dentro de outros sites, não vaza endereço,
   // não aparece em buscadores e não usa câmera, microfone nem localização.
   async headers() {
